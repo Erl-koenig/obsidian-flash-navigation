@@ -4,15 +4,15 @@ A powerful navigation plugin for Obsidian that lets you quickly jump to any visi
 
 ![demo](demo.gif)
 
-## ✨ Features
+## Features
 
--   **🔍 Smart Search**: Type characters to highlight matching text throughout your document
--   **🏷️ Jump Labels**: Automatically assigns labels to matches for instant navigation
--   **⚡ Fast Navigation**: Jump to any visible location with a single keypress
--   **🎨 Customizable Appearance**: Fully customizable colors and styling
--   **📝 Precise Highlighting**: Only highlights the exact characters you've typed
+- **🔍 Smart Search**: Type characters to highlight matching text throughout your document
+- **🏷️ Jump Labels**: Automatically assigns labels to matches for instant navigation
+- **⚡ Fast Navigation**: Jump to any visible location with a single keypress
+- **🎨 Customizable Appearance**: Fully customizable colors and styling
+- **📝 Precise Highlighting**: Only highlights the exact characters you've typed
 
-## 🚀 Installation
+## Installation
 
 ### From Obsidian Community Plugins
 
@@ -27,14 +27,14 @@ A powerful navigation plugin for Obsidian that lets you quickly jump to any visi
 2. Extract the files to `VaultFolder/.obsidian/plugins/obsidian-flash-navigation/`
 3. Reload Obsidian and enable the plugin in Settings
 
-## ⚙️ Setup
+## Setup
 
 ### Basic Usage
 
 Add a command to trigger flash navigation. You can use:
 
--   Command Palette: Search for "Start Flash Navigation"
--   Hotkey: Set a custom hotkey in Obsidian Settings > Hotkeys
+- Command Palette: Search for "Start Flash Navigation"
+- Hotkey: Set a custom hotkey in Obsidian Settings > Hotkeys
 
 ### Vim Mode Setup (Recommended)
 
@@ -47,7 +47,7 @@ exmap flashNav obcommand flash-navigation:start-flash-navigation
 nmap s :flashNav<CR>
 ```
 
-## 🎮 Usage
+## Usage
 
 1. **Start**: Trigger the flash navigation command (e.g. `s` remap in vim mode or via hotkey)
 2. **Search**: Type characters - matching text gets highlighted
@@ -64,44 +64,44 @@ nmap s :flashNav<CR>
 4. Press 'a' to jump to "hello"
 ```
 
-## 🎨 Customization
+## Customization
 
 The plugin offers extensive customization options in Settings:
 
--   **Search Behavior**: Case sensitivity and custom label characters
--   **Visual Styling**: Colors and font weights for dimmed text and matches
--   **Label Styling**: Appearance of jump labels
+- **Search Behavior**: Case sensitivity and custom label characters
+- **Visual Styling**: Colors and font weights for dimmed text and matches
+- **Label Styling**: Appearance of jump labels
 
-## 🗺️ Roadmap
+## Roadmap
 
 Have a feature request? Open an issue on GitHub!
 
--   Visual feedback when typing characters
--   Replace the next character with the label for jumping instead of inserting it (avoids layout change)
--   Different behavior when scrolling (exit flash mode or load more labels)
--   Smart Theme Colors: Automatically use theme accent colors and adapt to light/dark mode
--   Performance: Optimize for large documents (10,000+ lines)
--   ...
+- Visual feedback when typing characters
+- Replace the next character with the label for jumping instead of inserting it (avoids layout change)
+- Different behavior when scrolling (exit flash mode or load more labels)
+- Smart Theme Colors: Automatically use theme accent colors and adapt to light/dark mode
+- Performance: Optimize for large documents (10,000+ lines)
+- ...
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to:
 
--   Report bugs or request features via GitHub Issues
--   Submit pull requests for improvements
--   Share feedback and suggestions
+- Report bugs or request features via GitHub Issues
+- Submit pull requests for improvements
+- Share feedback and suggestions
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
--   Inspired by [flash.nvim](https://github.com/folke/flash.nvim) and [flash.vscode](https://github.com/cunbidun/flash.vscode)
--   Built for the [Obsidian](https://obsidian.md) community
--   Uses CodeMirror 6 decorations for precise text highlighting
+- Inspired by [flash.nvim](https://github.com/folke/flash.nvim) and [flash.vscode](https://github.com/cunbidun/flash.vscode)
+- Built for the [Obsidian](https://obsidian.md) community
+- Uses CodeMirror 6 decorations for precise text highlighting
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
-## Say Thanks 🙏
+## Say Thanks
 
 This plugin is developed by [Erl-koenig](https://github.com/Erl-koenig).
 
