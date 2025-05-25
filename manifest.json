@@ -1,0 +1,11 @@
+{
+	"id": "flash-navigation",
+	"name": "Flash Navigation",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Jump to any visible text instantly by typing characters and using labeled shortcuts for fast navigation.",
+	"author": "Erl-koenig",
+	"authorUrl": "https://github.com/Erl-koenig",
+	"fundingUrl": "https://www.buymeacoffee.com/erlkoenig",
+	"isDesktopOnly": true
+}
