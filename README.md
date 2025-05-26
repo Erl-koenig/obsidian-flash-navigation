@@ -15,6 +15,7 @@ A powerful navigation plugin for Obsidian that lets you quickly jump to any visi
 - **🔍 Smart Search**: Type characters to highlight matching text throughout your document
 - **🏷️ Jump Labels**: Automatically assigns labels to matches for instant navigation
 - **⚡ Fast Navigation**: Jump to any visible location with a single keypress
+- **📊 Live Search Display**: Real-time status bar shows what you're typing as you search
 - **🎨 Customizable Appearance**: Fully customizable colors and styling
 - **📝 Precise Highlighting**: Only highlights the exact characters you've typed
 
@@ -56,7 +57,7 @@ nmap s :flashNav<CR>
 ## Usage
 
 1. **Start**: Trigger the flash navigation command (e.g. `s` remap in vim mode or via hotkey)
-2. **Search**: Type characters - matching text gets highlighted
+2. **Search**: Type characters - matching text gets highlighted and your search query appears in the status bar with a ⚡ icon
 3. **Jump**: Press a label character (a-z, A-Z, 0-9) to jump to that location
 4. **Refine**: Continue typing to narrow down matches
 5. **Exit**: Press `Escape` or `Backspace` until search is empty
@@ -65,7 +66,7 @@ nmap s :flashNav<CR>
 
 ```
 1. Press 's' to start flash mode
-2. Type "hel" - all instances of "hel" get highlighted
+2. Type "hel" - all instances of "hel" get highlighted and status bar shows "⚡ hel"
 3. See labels: hel[a]lo, hel[b]p, hel[c]icopter
 4. Press 'a' to jump to "hello"
 ```
