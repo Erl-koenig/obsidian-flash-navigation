@@ -125,7 +125,6 @@ export default class FlashNavigation extends Plugin {
 		this.updateCSSVariables();
 
 		this.statusBarItem = this.addStatusBarItem();
-		// this.statusBarItem.style.display = "none";
 
 		// Exit flash mode when: 1) active view changes 2) file is opened 3) `escape` is pressed
 		this.registerEvent(
