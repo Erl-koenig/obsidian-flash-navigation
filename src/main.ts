@@ -389,7 +389,7 @@ export default class FlashNavigation extends Plugin {
 						Array(totalMatches - availableLabelChars.length).fill(
 							"?",
 						),
-					)
+				  )
 				: availableLabelChars.slice(0, totalMatches);
 
 		this.createLabels(doc, matches, labelCharsToUse, labelDecorations);
