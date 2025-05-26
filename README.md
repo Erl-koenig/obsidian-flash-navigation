@@ -70,6 +70,11 @@ nmap s :flashNav<CR>
 4. Press 'a' to jump to "hello"
 ```
 
+Behavior:
+
+- Automatically exits flash mode if no matches are found (similar to flash.nvim).
+- Uses specified label characters; if exhausted, fills remaining labels with `?`.
+
 ## Customization
 
 The plugin offers extensive customization options in Settings:
