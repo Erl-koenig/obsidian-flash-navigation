@@ -65,7 +65,7 @@ const CSS_CLASSES = {
 	STATUS_BAR: "flash-status-bar",
 	STATUS_BAR_ACTIVE: "active",
 	SETTINGS_WIDE_INPUT: "flash-settings-wide-input",
-};
+} as const;
 
 const DEFAULT_SETTINGS: FlashSettings = {
 	dimColor: "rgba(128, 128, 128, 0.5)",
