@@ -270,7 +270,7 @@ export default class FlashNavigation extends Plugin {
 			return;
 		}
 
-		const matches = this.findMatchesInVisibleRanges(editorView);
+		const matches = this.findMatches(editorView);
 
 		if (matches.length === 0 && this.searchQuery.length > 0) {
 			this.exitFlashMode();
@@ -296,28 +296,49 @@ export default class FlashNavigation extends Plugin {
 		}
 	}
 
-	private findMatchesInVisibleRanges(editorView: EditorView): Match[] {
+	// Need to calculate it manually because `visibleRanges` is not the exact viewport...
+	private getVisibleRange(
+		editorView: EditorView,
+	): { from: number; to: number } | null {
+		const rect = editorView.dom.getBoundingClientRect();
+		const topPos = editorView.posAtCoords({ x: rect.left, y: rect.top });
+		const bottomPos = editorView.posAtCoords({
+			x: rect.left,
+			y: rect.bottom,
+		});
+
+		if (topPos === null || bottomPos === null) {
+			return null;
+		}
+
+		return { from: topPos, to: bottomPos };
+	}
+
+	private findMatches(editorView: EditorView): Match[] {
 		const doc = editorView.state.doc;
-		const visibleRanges = editorView.visibleRanges;
+		const visibleRange = this.getVisibleRange(editorView);
+
+		if (!visibleRange) {
+			return [];
+		}
+
 		const searchText = this.settings.caseSensitive
 			? this.searchQuery
 			: this.searchQuery.toLowerCase();
 
 		const matches: Match[] = [];
 
-		for (const range of visibleRanges) {
-			const text = doc.sliceString(range.from, range.to);
-			const textToSearch = this.settings.caseSensitive
-				? text
-				: text.toLowerCase();
+		const text = doc.sliceString(visibleRange.from, visibleRange.to);
+		const textToSearch = this.settings.caseSensitive
+			? text
+			: text.toLowerCase();
 
-			let index = textToSearch.indexOf(searchText);
-			while (index !== -1) {
-				const globalFrom = range.from + index;
-				const globalTo = globalFrom + searchText.length;
-				matches.push({ from: globalFrom, to: globalTo });
-				index = textToSearch.indexOf(searchText, index + 1);
-			}
+		let index = textToSearch.indexOf(searchText);
+		while (index !== -1) {
+			const globalFrom = visibleRange.from + index;
+			const globalTo = globalFrom + searchText.length;
+			matches.push({ from: globalFrom, to: globalTo });
+			index = textToSearch.indexOf(searchText, index + 1);
 		}
 
 		return this.sortMatchesByDistance(doc, matches);
@@ -335,8 +356,12 @@ export default class FlashNavigation extends Plugin {
 		const dimDecorations: Range<Decoration>[] = [];
 		const dimDecoration = Decoration.mark({ class: CSS_CLASSES.DIM });
 
-		for (const range of editorView.visibleRanges) {
-			dimDecorations.push(dimDecoration.range(range.from, range.to));
+		const visibleRange = this.getVisibleRange(editorView);
+
+		if (visibleRange) {
+			dimDecorations.push(
+				dimDecoration.range(visibleRange.from, visibleRange.to),
+			);
 		}
 
 		editorView.dispatch({
@@ -362,32 +387,40 @@ export default class FlashNavigation extends Plugin {
 
 		this.labelMap.clear();
 
-		for (const visibleRange of editorView.visibleRanges) {
-			const matchesInRange = matches.filter(
-				(m) => m.from >= visibleRange.from && m.to <= visibleRange.to,
-			);
+		const visibleRange = this.getVisibleRange(editorView);
 
-			if (matchesInRange.length === 0) {
-				// Dim entire visible range if no matches
-				dimDecorations.push(
-					dimDecoration.range(visibleRange.from, visibleRange.to),
-				);
-			} else {
-				// Dim segments between matches
-				let lastEnd = visibleRange.from;
-				for (const match of matchesInRange) {
-					if (lastEnd < match.from) {
-						dimDecorations.push(
-							dimDecoration.range(lastEnd, match.from),
-						);
-					}
-					lastEnd = match.to;
-				}
-				if (lastEnd < visibleRange.to) {
+		if (!visibleRange) {
+			return {
+				dim: dimDecorations,
+				match: matchDecorations,
+				label: labelDecorations,
+			};
+		}
+
+		const matchesInRange = matches.filter(
+			(m) => m.from >= visibleRange.from && m.to <= visibleRange.to,
+		);
+
+		if (matchesInRange.length === 0) {
+			// Dim entire visible range if no matches
+			dimDecorations.push(
+				dimDecoration.range(visibleRange.from, visibleRange.to),
+			);
+		} else {
+			// Dim segments between matches
+			let lastEnd = visibleRange.from;
+			for (const match of matchesInRange) {
+				if (lastEnd < match.from) {
 					dimDecorations.push(
-						dimDecoration.range(lastEnd, visibleRange.to),
+						dimDecoration.range(lastEnd, match.from),
 					);
 				}
+				lastEnd = match.to;
+			}
+			if (lastEnd < visibleRange.to) {
+				dimDecorations.push(
+					dimDecoration.range(lastEnd, visibleRange.to),
+				);
 			}
 		}
 
