@@ -82,6 +82,10 @@ The plugin offers extensive customization options in Settings:
 
 Have a feature request? Open an issue on GitHub!
 
+The following features are planned:
+
+- Dim links and callouts
+- Support navigating callouts (if possible)
 - Visual feedback when typing characters
 - Replace the next character with the label for jumping instead of inserting it (avoids layout change)
 - Different behavior when scrolling (exit flash mode or load more labels)
