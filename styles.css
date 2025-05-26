@@ -30,3 +30,12 @@
 .flash-settings-wide-input {
 	width: 300px !important;
 }
+
+/* Status bar item */
+.flash-status-bar {
+	display: none;
+}
+
+.flash-status-bar.active {
+	display: inline-block;
+}

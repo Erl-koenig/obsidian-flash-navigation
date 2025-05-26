@@ -125,6 +125,7 @@ export default class FlashNavigation extends Plugin {
 		this.updateCSSVariables();
 
 		this.statusBarItem = this.addStatusBarItem();
+		this.statusBarItem.addClass("flash-status-bar");
 
 		// Exit flash mode when: 1) active view changes 2) file is opened 3) `escape` is pressed
 		this.registerEvent(
@@ -581,10 +582,10 @@ export default class FlashNavigation extends Plugin {
 		if (!this.statusBarItem) return;
 
 		if (this.isActive) {
-			this.statusBarItem.style.display = "";
+			this.statusBarItem.addClass("active");
 			this.statusBarItem.setText(`⚡ ${this.searchQuery || ""}`);
 		} else {
-			this.statusBarItem.style.display = "none";
+			this.statusBarItem.removeClass("active");
 		}
 	}
 }
