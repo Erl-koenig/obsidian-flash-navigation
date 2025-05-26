@@ -6,7 +6,7 @@ A powerful navigation plugin for Obsidian that lets you quickly jump to any visi
 [![Total Downloads](https://img.shields.io/github/downloads/Erl-koenig/obsidian-flash-navigation/total?style=flat&label=Total%20Downloads)](https://github.com/Erl-koenig/obsidian-flash-navigation/releases)
 [![GitHub License](https://img.shields.io/github/license/Erl-koenig/obsidian-flash-navigation?style=flat&label=License)](https://github.com/Erl-koenig/obsidian-flash-navigation/blob/master/LICENSE)
 [![GitHub Issues](https://img.shields.io/github/issues/Erl-koenig/obsidian-flash-navigation?style=flat&label=Issues)](https://github.com/Erl-koenig/obsidian-flash-navigation/issues)
-[![GitHub Last Commit](https://img.shields.io/github/last-commit/Erl-koenig/obsidian-flash-navigation?style=flat&label=Last%20Commit)](https://github.com/Erl-koenig/obsidian-flash-navigation/commits/master)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/Erl-koenig/obsidian-flash-navigation?style=flat&label=Last%20Commit)](https://github.com/Erl-koenig/obsidian-flash-navigation/commits/main)
 
 ![demo](assets/demo.gif)
 
