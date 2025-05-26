@@ -261,19 +261,14 @@ export default class FlashNavigation extends Plugin {
 
 		const matches = this.findMatchesInVisibleRanges(editorView);
 
+		if (matches.length === 0 && this.searchQuery.length > 0) {
+			this.exitFlashMode();
+			return;
+		}
+
 		// Only update if matches actually changed
 		if (!this.matchesEqual(matches, this.lastState.matches)) {
 			this.lastState.matches = matches;
-
-			if (matches.length === 0) {
-				// if no word found, exit
-				if (this.searchQuery.length > 0) {
-					this.exitFlashMode();
-					return;
-				}
-				this.dimVisibleText(editorView);
-				return;
-			}
 
 			const decorations = this.createOptimizedDecorations(
 				editorView,
