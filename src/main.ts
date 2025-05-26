@@ -117,11 +117,15 @@ export default class FlashNavigation extends Plugin {
 	private activeView: MarkdownView | null = null;
 	private updateTimeout: number | null = null;
 	private lastState: LastState = { matches: [], query: "" };
+	private statusBarItem: HTMLElement | null = null;
 
 	async onload() {
 		await this.loadSettings();
 		this.registerEditorExtension(flashDecorationField);
 		this.updateCSSVariables();
+
+		this.statusBarItem = this.addStatusBarItem();
+		this.statusBarItem.addClass("flash-status-bar");
 
 		// Exit flash mode when: 1) active view changes 2) file is opened 3) `escape` is pressed
 		this.registerEvent(
@@ -159,6 +163,7 @@ export default class FlashNavigation extends Plugin {
 					if (this.searchQuery.length > 0) {
 						this.labelMap.clear();
 						this.searchQuery = this.searchQuery.slice(0, -1);
+						this.updateStatusBar();
 						this.updateHighlights();
 					} else {
 						this.exitFlashMode();
@@ -179,6 +184,7 @@ export default class FlashNavigation extends Plugin {
 				if (event.key.length === 1) {
 					this.labelMap.clear();
 					this.searchQuery += event.key;
+					this.updateStatusBar();
 					this.updateHighlights();
 				}
 			}
@@ -217,6 +223,7 @@ export default class FlashNavigation extends Plugin {
 			capture: true,
 		});
 
+		this.updateStatusBar();
 		this.updateHighlights(); // initial update, dim text
 	}
 
@@ -259,6 +266,11 @@ export default class FlashNavigation extends Plugin {
 			this.lastState.matches = matches;
 
 			if (matches.length === 0) {
+				// if no word found, exit
+				if (this.searchQuery.length > 0) {
+					this.exitFlashMode();
+					return;
+				}
 				this.dimVisibleText(editorView);
 				return;
 			}
@@ -504,6 +516,8 @@ export default class FlashNavigation extends Plugin {
 
 		this.lastState = { matches: [], query: "" };
 
+		this.updateStatusBar();
+
 		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (activeView) {
 			const editorView = (activeView.editor as unknown as ObsidianEditor)
@@ -562,6 +576,17 @@ export default class FlashNavigation extends Plugin {
 		Object.entries(updates).forEach(([key, value]) => {
 			document.documentElement.style.setProperty(key, value as string);
 		});
+	}
+
+	private updateStatusBar(): void {
+		if (!this.statusBarItem) return;
+
+		if (this.isActive) {
+			this.statusBarItem.addClass("active");
+			this.statusBarItem.setText(`⚡ ${this.searchQuery || ""}`);
+		} else {
+			this.statusBarItem.removeClass("active");
+		}
 	}
 }
 
