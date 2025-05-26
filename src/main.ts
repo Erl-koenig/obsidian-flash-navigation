@@ -56,6 +56,17 @@ const LINE_WEIGHT = 10;
 const BASE_WEIGHT = 4;
 const DEBOUNCE_DELAY = 50;
 
+// CSS class name constants
+const CSS_CLASSES = {
+	DIM: "flash-dim",
+	MATCH: "flash-match",
+	LABEL: "flash-label",
+	LABEL_QUESTION: "flash-label-question",
+	STATUS_BAR: "flash-status-bar",
+	STATUS_BAR_ACTIVE: "active",
+	SETTINGS_WIDE_INPUT: "flash-settings-wide-input",
+};
+
 const DEFAULT_SETTINGS: FlashSettings = {
 	dimColor: "rgba(128, 128, 128, 0.5)",
 	matchColor: "rgb(0, 191, 255)",
@@ -125,7 +136,7 @@ export default class FlashNavigation extends Plugin {
 		this.updateCSSVariables();
 
 		this.statusBarItem = this.addStatusBarItem();
-		this.statusBarItem.addClass("flash-status-bar");
+		this.statusBarItem.addClass(CSS_CLASSES.STATUS_BAR);
 
 		// Exit flash mode when: 1) active view changes 2) file is opened 3) `escape` is pressed
 		this.registerEvent(
@@ -322,7 +333,7 @@ export default class FlashNavigation extends Plugin {
 
 	private dimVisibleText(editorView: EditorView): void {
 		const dimDecorations: Range<Decoration>[] = [];
-		const dimDecoration = Decoration.mark({ class: "flash-dim" });
+		const dimDecoration = Decoration.mark({ class: CSS_CLASSES.DIM });
 
 		for (const range of editorView.visibleRanges) {
 			dimDecorations.push(dimDecoration.range(range.from, range.to));
@@ -346,8 +357,8 @@ export default class FlashNavigation extends Plugin {
 		const matchDecorations: Range<Decoration>[] = [];
 		const labelDecorations: Range<Decoration>[] = [];
 
-		const dimDecoration = Decoration.mark({ class: "flash-dim" });
-		const matchDecoration = Decoration.mark({ class: "flash-match" });
+		const dimDecoration = Decoration.mark({ class: CSS_CLASSES.DIM });
+		const matchDecoration = Decoration.mark({ class: CSS_CLASSES.MATCH });
 
 		this.labelMap.clear();
 
@@ -577,10 +588,10 @@ export default class FlashNavigation extends Plugin {
 		if (!this.statusBarItem) return;
 
 		if (this.isActive) {
-			this.statusBarItem.addClass("active");
+			this.statusBarItem.addClass(CSS_CLASSES.STATUS_BAR_ACTIVE);
 			this.statusBarItem.setText(`⚡ ${this.searchQuery || ""}`);
 		} else {
-			this.statusBarItem.removeClass("active");
+			this.statusBarItem.removeClass(CSS_CLASSES.STATUS_BAR_ACTIVE);
 		}
 	}
 }
@@ -596,8 +607,8 @@ class LabelWidget extends WidgetType {
 	toDOM() {
 		const span = document.createElement("span");
 		span.className = this.isQuestionMark
-			? "flash-label flash-label-question"
-			: "flash-label";
+			? `${CSS_CLASSES.LABEL} ${CSS_CLASSES.LABEL_QUESTION}`
+			: CSS_CLASSES.LABEL;
 		span.textContent = this.label;
 		return span;
 	}
@@ -648,7 +659,7 @@ class FlashSettingsTab extends PluginSettingTab {
 						this.plugin.settings.labelChars = value;
 						await this.plugin.saveSettings();
 					});
-				text.inputEl.addClass("flash-settings-wide-input");
+				text.inputEl.addClass(CSS_CLASSES.SETTINGS_WIDE_INPUT);
 			})
 			.addExtraButton((button) =>
 				button
