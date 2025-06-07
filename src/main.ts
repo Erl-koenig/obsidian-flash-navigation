@@ -33,24 +33,24 @@ interface FlashSettings {
 	labelFontWeight: string;
 }
 
-interface Match {
-	from: number;
-	to: number;
-}
-
-interface CursorPosition {
-	line: number;
-	ch: number;
-}
-
-interface LastState {
-	matches: Match[];
-	query: string;
-}
-
 interface ObsidianEditor {
 	cm: EditorView;
 }
+
+type Match = {
+	from: number;
+	to: number;
+};
+
+type CursorPosition = {
+	line: number;
+	ch: number;
+};
+
+type LastState = {
+	matches: Match[];
+	query: string;
+};
 
 const LINE_WEIGHT = 10;
 const BASE_WEIGHT = 4;
@@ -440,7 +440,7 @@ export default class FlashNavigation extends Plugin {
 						Array(totalMatches - availableLabelChars.length).fill(
 							"?",
 						),
-				  )
+					)
 				: availableLabelChars.slice(0, totalMatches);
 
 		this.createLabels(doc, matches, labelCharsToUse, labelDecorations);
