@@ -668,7 +668,7 @@ class FlashSettingsTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		new Setting(containerEl).setName("Search Behavior").setHeading();
+		new Setting(containerEl).setName("Search behavior").setHeading();
 
 		new Setting(containerEl)
 			.setName("Case sensitive")
@@ -709,7 +709,7 @@ class FlashSettingsTab extends PluginSettingTab {
 		new Setting(containerEl).setName("Visual styling").setHeading();
 
 		new Setting(containerEl)
-			.setName("Dim Color")
+			.setName("Dim color")
 			.setDesc(
 				"The color used to dim text in flash navigation mode (e.g., rgba(128, 128, 128, 0.5))",
 			)
@@ -735,7 +735,7 @@ class FlashSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Match Color")
+			.setName("Match color")
 			.setDesc(
 				"The color used to highlight matching text (e.g., rgb(0, 191, 255) or #00bfff)",
 			)
@@ -761,7 +761,7 @@ class FlashSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Match Font Weight")
+			.setName("Match font weight")
 			.setDesc("The font weight for highlighted matches")
 			.addDropdown((dropdown) =>
 				dropdown
