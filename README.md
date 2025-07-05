@@ -76,7 +76,7 @@ Behavior:
 - Automatically exits flash mode if no matches are found (similar to flash.nvim).
 - Uses specified label characters; if exhausted, fills remaining labels with `?`.
 
-## Customization
+## Customization & Colors
 
 The plugin offers extensive customization options in Settings:
 
@@ -84,14 +84,24 @@ The plugin offers extensive customization options in Settings:
 - **Visual Styling**: Colors and font weights for dimmed text and matches
 - **Label Styling**: Appearance of jump labels
 
+### Color Customization
+
+All colors are optional and will use your current Obsidian theme colors as defaults:
+
+- **Dim Color**: Uses faint text color (for non-matching text)
+- **Match Color**: Uses accent color (for highlighted matches)
+- **Label Background**: Uses green color (for jump label backgrounds)
+- **Label Text**: Uses inverted accent text color (for jump label text)
+- **Question Mark Labels**: Uses yellow color (for overflow labels)
+
 ## Roadmap
 
 Have a feature request? Open an issue on GitHub!
 
 The following features are planned:
 
-- Smart Theme Colors: Automatically use theme accent colors and adapt to light/dark mode
 - Performance: Optimize for large documents (10,000+ lines)
+- Support navigation for other elements (links, tables, callouts, ...)
 - ...
 
 ## Contributing

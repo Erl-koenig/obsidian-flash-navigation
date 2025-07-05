@@ -1,18 +1,24 @@
 /* Dimmed text */
 .flash-dim {
-	color: var(--flash-dim-color, rgba(128, 128, 128, 0.5)) !important;
+	color: var(--flash-dim-color, var(--text-faint)) !important;
 }
 
 /* Highlighted matches */
 .flash-match {
-	color: var(--flash-match-color, rgb(0, 191, 255)) !important;
+	color: var(--flash-match-color, var(--text-accent)) !important;
 	font-weight: var(--flash-match-font-weight, normal) !important;
 }
 
 /* Jump labels */
 .flash-label {
-	background-color: var(--flash-label-bg-color, #a3be8c) !important;
-	color: var(--flash-label-text-color, black) !important;
+	background-color: var(
+		--flash-label-bg-color,
+		var(--color-green)
+	) !important;
+	color: var(
+		--flash-label-text-color,
+		var(--text-on-accent-inverted)
+	) !important;
 	font-weight: var(--flash-label-font-weight, normal) !important;
 	font-size: 0.8em;
 	padding: 1px 3px !important;
@@ -23,7 +29,10 @@
 
 /* Question mark labels for overflow */
 .flash-label-question {
-	background-color: var(--flash-label-question-bg-color, #ebcb8b) !important;
+	background-color: var(
+		--flash-label-question-bg-color,
+		var(--color-yellow)
+	) !important;
 }
 
 /* Settings input styling */

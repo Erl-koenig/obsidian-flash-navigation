@@ -68,15 +68,15 @@ const CSS_CLASSES = {
 } as const;
 
 const DEFAULT_SETTINGS: FlashSettings = {
-	dimColor: "rgba(128, 128, 128, 0.5)",
-	matchColor: "rgb(0, 191, 255)",
+	dimColor: "",
+	matchColor: "",
 	matchFontWeight: "normal",
 	caseSensitive: false,
 	labelChars:
 		"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-	labelBackgroundColor: "#a3be8c",
-	labelQuestionBackgroundColor: "#ebcb8b",
-	labelTextColor: "black",
+	labelBackgroundColor: "",
+	labelQuestionBackgroundColor: "",
+	labelTextColor: "",
 	labelFontWeight: "normal",
 };
 
@@ -613,7 +613,11 @@ export default class FlashNavigation extends Plugin {
 		};
 
 		Object.entries(updates).forEach(([key, value]) => {
-			document.documentElement.style.setProperty(key, value as string);
+			if (value && !value.startsWith("var(")) {
+				document.documentElement.style.setProperty(key, value);
+			} else {
+				document.documentElement.style.removeProperty(key); // use fallback values (obsidian css variables)
+			}
 		});
 	}
 
