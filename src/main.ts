@@ -124,6 +124,7 @@ export default class FlashNavigation extends Plugin {
 	private searchQuery = "";
 	private escapeHandler!: (event: KeyboardEvent) => void;
 	private keyHandler!: (event: KeyboardEvent) => void;
+	private scrollHandler!: (event: Event) => void;
 	private labelMap: Map<string, CursorPosition> = new Map();
 	private activeView: MarkdownView | null = null;
 	private updateTimeout: number | null = null;
@@ -138,7 +139,7 @@ export default class FlashNavigation extends Plugin {
 		this.statusBarItem = this.addStatusBarItem();
 		this.statusBarItem.addClass(CSS_CLASSES.STATUS_BAR);
 
-		// Exit flash mode when: 1) active view changes 2) file is opened 3) `escape` is pressed
+		// Exit flash mode when: 1) active view changes 2) file is opened 3) `escape` is pressed 4) scrolling happens during flash-mode
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", () => {
 				if (this.isActive) {
@@ -155,6 +156,12 @@ export default class FlashNavigation extends Plugin {
 		);
 		this.escapeHandler = (event: KeyboardEvent) => {
 			if (event.key === "Escape") {
+				this.exitFlashMode();
+			}
+		};
+
+		this.scrollHandler = (event: Event) => {
+			if (this.isActive) {
 				this.exitFlashMode();
 			}
 		};
@@ -231,6 +238,12 @@ export default class FlashNavigation extends Plugin {
 			capture: true,
 		});
 		document.addEventListener("keydown", this.keyHandler, {
+			capture: true,
+		});
+		document.addEventListener("scroll", this.scrollHandler, {
+			capture: true,
+		});
+		document.addEventListener("wheel", this.scrollHandler, {
 			capture: true,
 		});
 
@@ -570,6 +583,12 @@ export default class FlashNavigation extends Plugin {
 			capture: true,
 		});
 		document.removeEventListener("keydown", this.keyHandler, {
+			capture: true,
+		});
+		document.removeEventListener("scroll", this.scrollHandler, {
+			capture: true,
+		});
+		document.removeEventListener("wheel", this.scrollHandler, {
 			capture: true,
 		});
 	}
