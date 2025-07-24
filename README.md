@@ -71,10 +71,15 @@ nmap s :flashNav<CR>
 4. Press 'a' to jump to "hello"
 ```
 
-Behavior:
+**Behavior:**
 
-- Automatically exits flash mode if no matches are found (similar to flash.nvim).
 - Uses specified label characters; if exhausted, fills remaining labels with `?`.
+- Automatically exits flash mode if:
+  - No matches are found (similar to flash.nvim)
+  - `escape` is pressed
+  - `backspace` is pressed until search is empty
+  - Scrolling happens (mousewheel, scrollbar, etc.)
+  - The active view changes (e.g. switching files)
 
 ## Customization & Colors
 
