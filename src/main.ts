@@ -142,16 +142,12 @@ export default class FlashNavigation extends Plugin {
 		// Exit flash mode when: 1) active view changes 2) file is opened 3) `escape` is pressed 4) scrolling happens during flash-mode
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", () => {
-				if (this.isActive) {
-					this.exitFlashMode();
-				}
+				this.exitFlashMode();
 			}),
 		);
 		this.registerEvent(
 			this.app.workspace.on("file-open", () => {
-				if (this.isActive) {
-					this.exitFlashMode();
-				}
+				this.exitFlashMode();
 			}),
 		);
 		this.escapeHandler = (event: KeyboardEvent) => {
@@ -161,9 +157,7 @@ export default class FlashNavigation extends Plugin {
 		};
 
 		this.scrollHandler = (event: Event) => {
-			if (this.isActive) {
-				this.exitFlashMode();
-			}
+			this.exitFlashMode();
 		};
 
 		this.keyHandler = (event: KeyboardEvent) => {
