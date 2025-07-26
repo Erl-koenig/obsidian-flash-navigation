@@ -31,6 +31,7 @@ interface FlashSettings {
 	labelQuestionBackgroundColor: string;
 	labelTextColor: string;
 	labelFontWeight: string;
+	statusBarPosition: "left" | "right";
 }
 
 interface ObsidianEditor {
@@ -78,6 +79,7 @@ const DEFAULT_SETTINGS: FlashSettings = {
 	labelQuestionBackgroundColor: "",
 	labelTextColor: "",
 	labelFontWeight: "normal",
+	statusBarPosition: "right",
 };
 
 const addDimEffect = StateEffect.define<Range<Decoration>[]>();
@@ -135,11 +137,8 @@ export default class FlashNavigation extends Plugin {
 		await this.loadSettings();
 		this.registerEditorExtension(flashDecorationField);
 		this.updateCSSVariables();
+		this.createStatusBarItem();
 
-		this.statusBarItem = this.addStatusBarItem();
-		this.statusBarItem.addClass(CSS_CLASSES.STATUS_BAR);
-
-		// Exit flash mode when: 1) active view changes 2) file is opened 3) `escape` is pressed 4) scrolling happens during flash-mode
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", () => {
 				this.exitFlashMode();
@@ -548,6 +547,12 @@ export default class FlashNavigation extends Plugin {
 		editor.focus();
 	}
 
+	// Exit conditions:
+	// No matches are found (similar to flash.nvim)
+	// `escape` is pressed
+	// `backspace` is pressed until search is empty
+	// Scrolling happens (mousewheel, scrollbar, etc.)
+	// The active view changes (e.g. switching files)
 	private exitFlashMode(): void {
 		if (!this.isActive) return;
 		this.isActive = false;
@@ -598,6 +603,7 @@ export default class FlashNavigation extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		this.updateCSSVariables();
+		this.createStatusBarItem();
 	}
 
 	private getSettingWithDefault(key: keyof FlashSettings): string {
@@ -632,6 +638,22 @@ export default class FlashNavigation extends Plugin {
 				document.documentElement.style.removeProperty(key); // use fallback values (obsidian css variables)
 			}
 		});
+	}
+
+	private createStatusBarItem(): void {
+		if (this.statusBarItem) {
+			this.statusBarItem.remove();
+		}
+
+		this.statusBarItem = this.addStatusBarItem();
+
+		if (this.settings.statusBarPosition === "left") {
+			this.statusBarItem.addClass("left");
+		} else {
+			this.statusBarItem.removeClass("left");
+		}
+
+		this.statusBarItem.addClass(CSS_CLASSES.STATUS_BAR);
 	}
 
 	private updateStatusBar(): void {
@@ -724,6 +746,22 @@ class FlashSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl).setName("Visual styling").setHeading();
+
+		new Setting(containerEl)
+			.setName("Status bar position")
+			.setDesc("The position of the status bar item")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("left", "Left")
+					.addOption("right", "Right")
+					.setValue(this.plugin.settings.statusBarPosition)
+					.onChange(async (value) => {
+						this.plugin.settings.statusBarPosition = value as
+							| "left"
+							| "right";
+						await this.plugin.saveSettings();
+					}),
+			);
 
 		new Setting(containerEl)
 			.setName("Dim color")

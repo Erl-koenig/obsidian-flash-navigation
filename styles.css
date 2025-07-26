@@ -48,3 +48,7 @@
 .flash-status-bar.active {
 	display: inline-block;
 }
+
+.flash-status-bar.left {
+	order: -1;
+}
