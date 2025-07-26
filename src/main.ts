@@ -95,23 +95,19 @@ const flashDecorationField = StateField.define<DecorationSet>({
 		decorations = decorations.map(transaction.changes);
 
 		for (const effect of transaction.effects) {
-			if (effect.is(addDimEffect)) {
+			if (effect.is(clearAllEffect)) {
+				return Decoration.none;
+			}
+
+			if (
+				effect.is(addDimEffect) ||
+				effect.is(addMatchEffect) ||
+				effect.is(addLabelEffect)
+			) {
 				decorations = decorations.update({
 					add: effect.value,
 					sort: true,
 				});
-			} else if (effect.is(addMatchEffect)) {
-				decorations = decorations.update({
-					add: effect.value,
-					sort: true,
-				});
-			} else if (effect.is(addLabelEffect)) {
-				decorations = decorations.update({
-					add: effect.value,
-					sort: true,
-				});
-			} else if (effect.is(clearAllEffect)) {
-				decorations = Decoration.none;
 			}
 		}
 
@@ -137,7 +133,7 @@ export default class FlashNavigation extends Plugin {
 		await this.loadSettings();
 		this.registerEditorExtension(flashDecorationField);
 		this.updateCSSVariables();
-		this.createStatusBarItem();
+		this.setupStatusBarItem();
 
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", () => {
@@ -221,12 +217,7 @@ export default class FlashNavigation extends Plugin {
 		this.exitFlashMode();
 	}
 
-	private startFlashMode(view: MarkdownView) {
-		this.isActive = true;
-		this.searchQuery = "";
-		this.labelMap.clear();
-		this.activeView = view;
-
+	private addEventListeners(): void {
 		document.addEventListener("keydown", this.escapeHandler, {
 			capture: true,
 		});
@@ -239,7 +230,30 @@ export default class FlashNavigation extends Plugin {
 		document.addEventListener("wheel", this.scrollHandler, {
 			capture: true,
 		});
+	}
 
+	private removeEventListeners(): void {
+		document.removeEventListener("keydown", this.escapeHandler, {
+			capture: true,
+		});
+		document.removeEventListener("keydown", this.keyHandler, {
+			capture: true,
+		});
+		document.removeEventListener("scroll", this.scrollHandler, {
+			capture: true,
+		});
+		document.removeEventListener("wheel", this.scrollHandler, {
+			capture: true,
+		});
+	}
+
+	private startFlashMode(view: MarkdownView) {
+		this.isActive = true;
+		this.searchQuery = "";
+		this.labelMap.clear();
+		this.activeView = view;
+
+		this.addEventListeners();
 		this.updateStatusBar();
 		this.updateHighlights(); // initial update, dim text
 	}
@@ -578,18 +592,7 @@ export default class FlashNavigation extends Plugin {
 			});
 		}
 
-		document.removeEventListener("keydown", this.escapeHandler, {
-			capture: true,
-		});
-		document.removeEventListener("keydown", this.keyHandler, {
-			capture: true,
-		});
-		document.removeEventListener("scroll", this.scrollHandler, {
-			capture: true,
-		});
-		document.removeEventListener("wheel", this.scrollHandler, {
-			capture: true,
-		});
+		this.removeEventListeners();
 	}
 
 	async loadSettings() {
@@ -603,7 +606,7 @@ export default class FlashNavigation extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		this.updateCSSVariables();
-		this.createStatusBarItem();
+		this.setupStatusBarItem();
 	}
 
 	private getSettingWithDefault(key: keyof FlashSettings): string {
@@ -640,20 +643,16 @@ export default class FlashNavigation extends Plugin {
 		});
 	}
 
-	private createStatusBarItem(): void {
-		if (this.statusBarItem) {
-			this.statusBarItem.remove();
+	private setupStatusBarItem(): void {
+		if (!this.statusBarItem) {
+			this.statusBarItem = this.addStatusBarItem();
+			this.statusBarItem.addClass(CSS_CLASSES.STATUS_BAR);
 		}
 
-		this.statusBarItem = this.addStatusBarItem();
-
+		this.statusBarItem.removeClass("left");
 		if (this.settings.statusBarPosition === "left") {
 			this.statusBarItem.addClass("left");
-		} else {
-			this.statusBarItem.removeClass("left");
 		}
-
-		this.statusBarItem.addClass(CSS_CLASSES.STATUS_BAR);
 	}
 
 	private updateStatusBar(): void {
