@@ -563,7 +563,6 @@ export default class FlashNavigation extends Plugin {
 		if (!this.isActive) return;
 		this.isActive = false;
 		this.searchQuery = "";
-		this.labelMap.clear();
 		this.activeView = null;
 
 		if (this.updateTimeout) {
