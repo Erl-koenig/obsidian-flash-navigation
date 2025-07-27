@@ -1,127 +1,30 @@
+import { Editor, MarkdownView, MarkdownFileInfo, Plugin } from "obsidian";
+import { Range, Text as CMText } from "@codemirror/state";
+import { EditorView, Decoration } from "@codemirror/view";
 import {
-	App,
-	Editor,
-	MarkdownView,
-	MarkdownFileInfo,
-	Plugin,
-	PluginSettingTab,
-	Setting,
-} from "obsidian";
-
+	FlashSettings,
+	ObsidianEditor,
+	Match,
+	CursorPosition,
+	LastState,
+} from "./types";
+import { DEFAULT_SETTINGS, DEBOUNCE_DELAY, CSS_CLASSES } from "./constants";
+import { getVisibleRange, matchesEqual, sortMatchesByDistance } from "./utils";
 import {
-	StateField,
-	StateEffect,
-	Range,
-	Text as CMText,
-} from "@codemirror/state";
-import {
-	Decoration,
-	DecorationSet,
-	EditorView,
-	WidgetType,
-} from "@codemirror/view";
-
-interface FlashSettings {
-	dimColor: string;
-	matchColor: string;
-	matchFontWeight: string;
-	caseSensitive: boolean;
-	labelChars: string;
-	labelBackgroundColor: string;
-	labelQuestionBackgroundColor: string;
-	labelTextColor: string;
-	labelFontWeight: string;
-	statusBarPosition: "left" | "right";
-}
-
-interface ObsidianEditor {
-	cm: EditorView;
-}
-
-type Match = {
-	from: number;
-	to: number;
-};
-
-type CursorPosition = {
-	line: number;
-	ch: number;
-};
-
-type LastState = {
-	matches: Match[];
-	query: string;
-};
-
-const LINE_WEIGHT = 10;
-const BASE_WEIGHT = 4;
-const DEBOUNCE_DELAY = 50;
-
-// CSS class name constants
-const CSS_CLASSES = {
-	DIM: "flash-dim",
-	MATCH: "flash-match",
-	LABEL: "flash-label",
-	LABEL_QUESTION: "flash-label-question",
-	STATUS_BAR: "flash-status-bar",
-	STATUS_BAR_ACTIVE: "active",
-	SETTINGS_WIDE_INPUT: "flash-settings-wide-input",
-} as const;
-
-const DEFAULT_SETTINGS: FlashSettings = {
-	dimColor: "",
-	matchColor: "",
-	matchFontWeight: "normal",
-	caseSensitive: false,
-	labelChars:
-		"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-	labelBackgroundColor: "",
-	labelQuestionBackgroundColor: "",
-	labelTextColor: "",
-	labelFontWeight: "normal",
-	statusBarPosition: "right",
-};
-
-const addDimEffect = StateEffect.define<Range<Decoration>[]>();
-const addMatchEffect = StateEffect.define<Range<Decoration>[]>();
-const addLabelEffect = StateEffect.define<Range<Decoration>[]>();
-const clearAllEffect = StateEffect.define();
-
-const flashDecorationField = StateField.define<DecorationSet>({
-	create() {
-		return Decoration.none;
-	},
-	update(decorations, transaction) {
-		decorations = decorations.map(transaction.changes);
-
-		for (const effect of transaction.effects) {
-			if (effect.is(clearAllEffect)) {
-				return Decoration.none;
-			}
-
-			if (
-				effect.is(addDimEffect) ||
-				effect.is(addMatchEffect) ||
-				effect.is(addLabelEffect)
-			) {
-				decorations = decorations.update({
-					add: effect.value,
-					sort: true,
-				});
-			}
-		}
-
-		return decorations;
-	},
-	provide: (field) => EditorView.decorations.from(field),
-});
+	flashDecorationField,
+	addDimEffect,
+	addMatchEffect,
+	addLabelEffect,
+	clearAllEffect,
+} from "./decorators";
+import { LabelWidget } from "./widgets";
+import { FlashSettingsTab } from "./settings";
 
 export default class FlashNavigation extends Plugin {
 	settings!: FlashSettings;
 	private isActive = false;
 	private searchQuery = "";
-	private escapeHandler!: (event: KeyboardEvent) => void;
-	private keyHandler!: (event: KeyboardEvent) => void;
+	private keydownHandler!: (event: KeyboardEvent) => void;
 	private scrollHandler!: (event: Event) => void;
 	private labelMap: Map<string, CursorPosition> = new Map();
 	private activeView: MarkdownView | null = null;
@@ -145,17 +48,16 @@ export default class FlashNavigation extends Plugin {
 				this.exitFlashMode();
 			}),
 		);
-		this.escapeHandler = (event: KeyboardEvent) => {
-			if (event.key === "Escape") {
-				this.exitFlashMode();
-			}
-		};
-
 		this.scrollHandler = (event: Event) => {
 			this.exitFlashMode();
 		};
 
-		this.keyHandler = (event: KeyboardEvent) => {
+		this.keydownHandler = (event: KeyboardEvent) => {
+			if (event.key === "Escape") {
+				this.exitFlashMode();
+				return;
+			}
+
 			if (this.isActive) {
 				const currentView =
 					this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -188,6 +90,7 @@ export default class FlashNavigation extends Plugin {
 					return;
 				}
 
+				// adding a character
 				if (event.key.length === 1) {
 					this.labelMap.clear();
 					this.searchQuery += event.key;
@@ -218,10 +121,7 @@ export default class FlashNavigation extends Plugin {
 	}
 
 	private addEventListeners(): void {
-		document.addEventListener("keydown", this.escapeHandler, {
-			capture: true,
-		});
-		document.addEventListener("keydown", this.keyHandler, {
+		document.addEventListener("keydown", this.keydownHandler, {
 			capture: true,
 		});
 		document.addEventListener("scroll", this.scrollHandler, {
@@ -233,10 +133,7 @@ export default class FlashNavigation extends Plugin {
 	}
 
 	private removeEventListeners(): void {
-		document.removeEventListener("keydown", this.escapeHandler, {
-			capture: true,
-		});
-		document.removeEventListener("keydown", this.keyHandler, {
+		document.removeEventListener("keydown", this.keydownHandler, {
 			capture: true,
 		});
 		document.removeEventListener("scroll", this.scrollHandler, {
@@ -298,7 +195,7 @@ export default class FlashNavigation extends Plugin {
 		}
 
 		// Only update if matches actually changed
-		if (!this.matchesEqual(matches, this.lastState.matches)) {
+		if (!matchesEqual(matches, this.lastState.matches)) {
 			this.lastState.matches = matches;
 
 			const decorations = this.createOptimizedDecorations(
@@ -316,27 +213,9 @@ export default class FlashNavigation extends Plugin {
 		}
 	}
 
-	// Need to calculate it manually because `visibleRanges` is not the exact viewport...
-	private getVisibleRange(
-		editorView: EditorView,
-	): { from: number; to: number } | null {
-		const rect = editorView.dom.getBoundingClientRect();
-		const topPos = editorView.posAtCoords({ x: rect.left, y: rect.top });
-		const bottomPos = editorView.posAtCoords({
-			x: rect.left,
-			y: rect.bottom,
-		});
-
-		if (topPos === null || bottomPos === null) {
-			return null;
-		}
-
-		return { from: topPos, to: bottomPos };
-	}
-
 	private findMatches(editorView: EditorView): Match[] {
 		const doc = editorView.state.doc;
-		const visibleRange = this.getVisibleRange(editorView);
+		const visibleRange = getVisibleRange(editorView);
 
 		if (!visibleRange) {
 			return [];
@@ -361,22 +240,18 @@ export default class FlashNavigation extends Plugin {
 			index = textToSearch.indexOf(searchText, index + 1);
 		}
 
-		return this.sortMatchesByDistance(doc, matches);
-	}
-
-	private matchesEqual(a: Match[], b: Match[]): boolean {
-		if (a.length !== b.length) return false;
-		for (let i = 0; i < a.length; i++) {
-			if (a[i].from !== b[i].from || a[i].to !== b[i].to) return false;
-		}
-		return true;
+		return sortMatchesByDistance(
+			doc,
+			matches,
+			this.app.workspace.getActiveViewOfType(MarkdownView),
+		);
 	}
 
 	private dimVisibleText(editorView: EditorView): void {
 		const dimDecorations: Range<Decoration>[] = [];
 		const dimDecoration = Decoration.mark({ class: CSS_CLASSES.DIM });
 
-		const visibleRange = this.getVisibleRange(editorView);
+		const visibleRange = getVisibleRange(editorView);
 
 		if (visibleRange) {
 			dimDecorations.push(
@@ -405,9 +280,7 @@ export default class FlashNavigation extends Plugin {
 		const dimDecoration = Decoration.mark({ class: CSS_CLASSES.DIM });
 		const matchDecoration = Decoration.mark({ class: CSS_CLASSES.MATCH });
 
-		this.labelMap.clear();
-
-		const visibleRange = this.getVisibleRange(editorView);
+		const visibleRange = getVisibleRange(editorView);
 
 		if (!visibleRange) {
 			return {
@@ -493,38 +366,6 @@ export default class FlashNavigation extends Plugin {
 		return labelChars.split("").filter((c) => !allNextChars.includes(c));
 	}
 
-	private getDistance(
-		doc: CMText,
-		cursorPos: CursorPosition,
-		matchFrom: number,
-	): number {
-		const matchPos = doc.lineAt(matchFrom);
-		const matchLine = matchPos.number - 1;
-		const matchCh = matchFrom - matchPos.from;
-
-		const lineDiff = cursorPos.line - matchLine;
-		const charDiff = cursorPos.ch - matchCh;
-		return (
-			lineDiff * lineDiff * LINE_WEIGHT +
-			charDiff * charDiff +
-			BASE_WEIGHT
-		);
-	}
-
-	private sortMatchesByDistance(doc: CMText, matches: Match[]): Match[] {
-		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (!activeView) return matches;
-
-		const editor = activeView.editor;
-		const cursorPos = editor.getCursor();
-
-		return matches.sort((a, b) => {
-			const distanceA = this.getDistance(doc, cursorPos, a.from);
-			const distanceB = this.getDistance(doc, cursorPos, b.from);
-			return distanceA - distanceB;
-		});
-	}
-
 	private createLabels(
 		doc: CMText,
 		matches: Match[],
@@ -571,7 +412,6 @@ export default class FlashNavigation extends Plugin {
 		if (!this.isActive) return;
 		this.isActive = false;
 		this.searchQuery = "";
-		this.labelMap.clear();
 		this.activeView = null;
 
 		if (this.updateTimeout) {
@@ -665,263 +505,5 @@ export default class FlashNavigation extends Plugin {
 		} else {
 			this.statusBarItem.removeClass(CSS_CLASSES.STATUS_BAR_ACTIVE);
 		}
-	}
-}
-
-class LabelWidget extends WidgetType {
-	constructor(
-		private label: string,
-		private isQuestionMark: boolean = false,
-	) {
-		super();
-	}
-
-	toDOM() {
-		const span = document.createElement("span");
-		span.className = this.isQuestionMark
-			? `${CSS_CLASSES.LABEL} ${CSS_CLASSES.LABEL_QUESTION}`
-			: CSS_CLASSES.LABEL;
-		span.textContent = this.label;
-		return span;
-	}
-
-	eq(other: WidgetType): boolean {
-		return (
-			other instanceof LabelWidget &&
-			other.label === this.label &&
-			other.isQuestionMark === this.isQuestionMark
-		);
-	}
-}
-
-class FlashSettingsTab extends PluginSettingTab {
-	plugin: FlashNavigation;
-
-	constructor(app: App, plugin: FlashNavigation) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const { containerEl } = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl).setName("Search behavior").setHeading();
-
-		new Setting(containerEl)
-			.setName("Case sensitive")
-			.setDesc("Whether search should be case sensitive")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.caseSensitive)
-					.onChange(async (value) => {
-						this.plugin.settings.caseSensitive = value;
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Label characters")
-			.setDesc("Characters used for jump labels")
-			.addText((text) => {
-				text.setPlaceholder("abcdefghijklmnopqrstuvwxyz...")
-					.setValue(this.plugin.settings.labelChars)
-					.onChange(async (value) => {
-						this.plugin.settings.labelChars = value;
-						await this.plugin.saveSettings();
-					});
-				text.inputEl.addClass(CSS_CLASSES.SETTINGS_WIDE_INPUT);
-			})
-			.addExtraButton((button) =>
-				button
-					.setIcon("reset")
-					.setTooltip("Reset to default")
-					.onClick(async () => {
-						this.plugin.settings.labelChars =
-							DEFAULT_SETTINGS.labelChars;
-						await this.plugin.saveSettings();
-						this.display();
-					}),
-			);
-
-		new Setting(containerEl).setName("Visual styling").setHeading();
-
-		new Setting(containerEl)
-			.setName("Status bar position")
-			.setDesc("The position of the status bar item")
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("left", "Left")
-					.addOption("right", "Right")
-					.setValue(this.plugin.settings.statusBarPosition)
-					.onChange(async (value) => {
-						this.plugin.settings.statusBarPosition = value as
-							| "left"
-							| "right";
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Dim color")
-			.setDesc(
-				"The color used to dim text in flash navigation mode (e.g., rgba(128, 128, 128, 0.5))",
-			)
-			.addText((text) =>
-				text
-					.setPlaceholder("rgba(128, 128, 128, 0.5)")
-					.setValue(this.plugin.settings.dimColor)
-					.onChange(async (value) => {
-						this.plugin.settings.dimColor = value;
-						await this.plugin.saveSettings();
-					}),
-			)
-			.addExtraButton((button) =>
-				button
-					.setIcon("reset")
-					.setTooltip("Reset to default")
-					.onClick(async () => {
-						this.plugin.settings.dimColor =
-							DEFAULT_SETTINGS.dimColor;
-						await this.plugin.saveSettings();
-						this.display();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Match color")
-			.setDesc(
-				"The color used to highlight matching text (e.g., rgb(0, 191, 255) or #00bfff)",
-			)
-			.addText((text) =>
-				text
-					.setPlaceholder("rgb(0,191,255)")
-					.setValue(this.plugin.settings.matchColor)
-					.onChange(async (value) => {
-						this.plugin.settings.matchColor = value;
-						await this.plugin.saveSettings();
-					}),
-			)
-			.addExtraButton((button) =>
-				button
-					.setIcon("reset")
-					.setTooltip("Reset to default")
-					.onClick(async () => {
-						this.plugin.settings.matchColor =
-							DEFAULT_SETTINGS.matchColor;
-						await this.plugin.saveSettings();
-						this.display();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Match font weight")
-			.setDesc("The font weight for highlighted matches")
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("normal", "Normal")
-					.addOption("bold", "Bold")
-					.setValue(this.plugin.settings.matchFontWeight)
-					.onChange(async (value) => {
-						this.plugin.settings.matchFontWeight = value;
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl).setName("Label styling").setHeading();
-
-		new Setting(containerEl)
-			.setName("Label background color")
-			.setDesc(
-				"The background color for jump labels (e.g., #a3be8c or rgb(163, 190, 140))",
-			)
-			.addText((text) =>
-				text
-					.setPlaceholder("#a3be8c")
-					.setValue(this.plugin.settings.labelBackgroundColor)
-					.onChange(async (value) => {
-						this.plugin.settings.labelBackgroundColor = value;
-						await this.plugin.saveSettings();
-					}),
-			)
-			.addExtraButton((button) =>
-				button
-					.setIcon("reset")
-					.setTooltip("Reset to default")
-					.onClick(async () => {
-						this.plugin.settings.labelBackgroundColor =
-							DEFAULT_SETTINGS.labelBackgroundColor;
-						await this.plugin.saveSettings();
-						this.display();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Overflow question mark label color")
-			.setDesc(
-				"The background color for overflow question mark labels (e.g., #ebcb8b)",
-			)
-			.addText((text) =>
-				text
-					.setPlaceholder("#ebcb8b")
-					.setValue(this.plugin.settings.labelQuestionBackgroundColor)
-					.onChange(async (value) => {
-						this.plugin.settings.labelQuestionBackgroundColor =
-							value;
-						await this.plugin.saveSettings();
-					}),
-			)
-			.addExtraButton((button) =>
-				button
-					.setIcon("reset")
-					.setTooltip("Reset to default")
-					.onClick(async () => {
-						this.plugin.settings.labelQuestionBackgroundColor =
-							DEFAULT_SETTINGS.labelQuestionBackgroundColor;
-						await this.plugin.saveSettings();
-						this.display();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Label text color")
-			.setDesc(
-				"The text color for jump labels (e.g., black, white, #000000)",
-			)
-			.addText((text) =>
-				text
-					.setPlaceholder("black")
-					.setValue(this.plugin.settings.labelTextColor)
-					.onChange(async (value) => {
-						this.plugin.settings.labelTextColor = value;
-						await this.plugin.saveSettings();
-					}),
-			)
-			.addExtraButton((button) =>
-				button
-					.setIcon("reset")
-					.setTooltip("Reset to default")
-					.onClick(async () => {
-						this.plugin.settings.labelTextColor =
-							DEFAULT_SETTINGS.labelTextColor;
-						await this.plugin.saveSettings();
-						this.display();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Label font weight")
-			.setDesc("The font weight for jump labels")
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("normal", "Normal")
-					.addOption("bold", "Bold")
-					.setValue(this.plugin.settings.labelFontWeight)
-					.onChange(async (value) => {
-						this.plugin.settings.labelFontWeight = value;
-						await this.plugin.saveSettings();
-					}),
-			);
 	}
 }
