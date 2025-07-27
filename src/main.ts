@@ -186,6 +186,7 @@ export default class FlashNavigation extends Plugin {
 					return;
 				}
 
+				// adding a character
 				if (event.key.length === 1) {
 					this.labelMap.clear();
 					this.searchQuery += event.key;
@@ -396,8 +397,6 @@ export default class FlashNavigation extends Plugin {
 
 		const dimDecoration = Decoration.mark({ class: CSS_CLASSES.DIM });
 		const matchDecoration = Decoration.mark({ class: CSS_CLASSES.MATCH });
-
-		this.labelMap.clear();
 
 		const visibleRange = this.getVisibleRange(editorView);
 
