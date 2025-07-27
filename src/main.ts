@@ -402,6 +402,12 @@ export default class FlashNavigation extends Plugin {
 		editor.focus();
 	}
 
+	// Exit conditions:
+	// No matches are found (similar to flash.nvim)
+	// `escape` is pressed
+	// `backspace` is pressed until search is empty
+	// Scrolling happens (mousewheel, scrollbar, etc.)
+	// The active view changes (e.g. switching files)
 	private exitFlashMode(): void {
 		if (!this.isActive) return;
 		this.isActive = false;
