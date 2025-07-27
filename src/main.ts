@@ -649,9 +649,10 @@ export default class FlashNavigation extends Plugin {
 			this.statusBarItem.addClass(CSS_CLASSES.STATUS_BAR);
 		}
 
-		this.statusBarItem.removeClass("left");
 		if (this.settings.statusBarPosition === "left") {
 			this.statusBarItem.addClass("left");
+		} else {
+			this.statusBarItem.removeClass("left");
 		}
 	}
 
