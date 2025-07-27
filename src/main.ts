@@ -120,8 +120,7 @@ export default class FlashNavigation extends Plugin {
 	settings!: FlashSettings;
 	private isActive = false;
 	private searchQuery = "";
-	private escapeHandler!: (event: KeyboardEvent) => void;
-	private keyHandler!: (event: KeyboardEvent) => void;
+	private keydownHandler!: (event: KeyboardEvent) => void;
 	private scrollHandler!: (event: Event) => void;
 	private labelMap: Map<string, CursorPosition> = new Map();
 	private activeView: MarkdownView | null = null;
@@ -145,17 +144,16 @@ export default class FlashNavigation extends Plugin {
 				this.exitFlashMode();
 			}),
 		);
-		this.escapeHandler = (event: KeyboardEvent) => {
-			if (event.key === "Escape") {
-				this.exitFlashMode();
-			}
-		};
-
 		this.scrollHandler = (event: Event) => {
 			this.exitFlashMode();
 		};
 
-		this.keyHandler = (event: KeyboardEvent) => {
+		this.keydownHandler = (event: KeyboardEvent) => {
+			if (event.key === "Escape") {
+				this.exitFlashMode();
+				return;
+			}
+
 			if (this.isActive) {
 				const currentView =
 					this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -218,10 +216,7 @@ export default class FlashNavigation extends Plugin {
 	}
 
 	private addEventListeners(): void {
-		document.addEventListener("keydown", this.escapeHandler, {
-			capture: true,
-		});
-		document.addEventListener("keydown", this.keyHandler, {
+		document.addEventListener("keydown", this.keydownHandler, {
 			capture: true,
 		});
 		document.addEventListener("scroll", this.scrollHandler, {
@@ -233,10 +228,7 @@ export default class FlashNavigation extends Plugin {
 	}
 
 	private removeEventListeners(): void {
-		document.removeEventListener("keydown", this.escapeHandler, {
-			capture: true,
-		});
-		document.removeEventListener("keydown", this.keyHandler, {
+		document.removeEventListener("keydown", this.keydownHandler, {
 			capture: true,
 		});
 		document.removeEventListener("scroll", this.scrollHandler, {
