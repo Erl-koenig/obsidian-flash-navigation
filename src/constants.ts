@@ -26,4 +26,5 @@ export const DEFAULT_SETTINGS: FlashSettings = {
 	labelTextColor: "",
 	labelFontWeight: "normal",
 	statusBarPosition: "right",
+	replaceChar: false,
 };

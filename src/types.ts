@@ -11,6 +11,7 @@ export interface FlashSettings {
 	labelTextColor: string;
 	labelFontWeight: string;
 	statusBarPosition: "left" | "right";
+	replaceChar: boolean;
 }
 
 export interface ObsidianEditor {

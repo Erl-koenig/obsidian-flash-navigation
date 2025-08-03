@@ -87,7 +87,7 @@ The plugin offers various customization options in Settings:
 
 - **Search Behavior**: Case sensitivity and custom label characters
 - **Visual Styling**: Colors and font weights for dimmed text and matches
-- **Label Styling**: Appearance of jump labels
+- **Label Styling**: Appearance and position of jump labels
 - **Status Bar Position**: Sets the position of the status bar item
 
 ### Color Customization

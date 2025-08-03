@@ -140,6 +140,20 @@ export class FlashSettingsTab extends PluginSettingTab {
 		new Setting(containerEl).setName("Label styling").setHeading();
 
 		new Setting(containerEl)
+			.setName("Replace next character")
+			.setDesc(
+				"Show jump labels over the next character instead of inserting them after matches. For example, when searching ‘tre’ in the string ‘tree’, the jump label displays as ‘tre[a]’ over the last ‘e’, not as ‘tre[a]e’.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.replaceChar)
+					.onChange(async (value) => {
+						this.plugin.settings.replaceChar = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName("Label background color")
 			.setDesc(
 				"The background color for jump labels (e.g., #a3be8c or rgb(163, 190, 140))",

@@ -384,12 +384,33 @@ export default class FlashNavigation extends Plugin {
 				});
 			}
 
-			const labelDecoration = Decoration.widget({
-				widget: new LabelWidget(label, label === "?"),
-				side: 1,
-			});
-
-			labelDecorations.push(labelDecoration.range(match.to));
+			if (this.settings.replaceChar && match.to < doc.length) {
+				// Check if the next character is a new line (else it shifts the line to the previous one)
+				const nextChar = doc.sliceString(match.to, match.to + 1);
+				if (nextChar === "\n") {
+					// dont replace newlines, just insert the label at the end (default behavior)
+					const labelDecoration = Decoration.widget({
+						widget: new LabelWidget(label, label === "?"),
+						side: 1,
+					});
+					labelDecorations.push(labelDecoration.range(match.to));
+				} else {
+					const nextCharEnd = match.to + 1;
+					const replaceDecoration = Decoration.replace({
+						widget: new LabelWidget(label, label === "?"),
+					});
+					labelDecorations.push(
+						replaceDecoration.range(match.to, nextCharEnd),
+					);
+				}
+			} else {
+				// Default behavior: insert label after match
+				const labelDecoration = Decoration.widget({
+					widget: new LabelWidget(label, label === "?"),
+					side: 1,
+				});
+				labelDecorations.push(labelDecoration.range(match.to));
+			}
 		}
 	}
 
