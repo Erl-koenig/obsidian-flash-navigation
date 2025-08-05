@@ -154,17 +154,8 @@ export default class FlashNavigation extends Plugin {
 		this.searchQuery = "";
 		this.labelMap.clear();
 		this.activeView = view;
-
 		this.wasInSourceMode = Boolean(view.getState().source);
-		if (!this.wasInSourceMode && this.settings.autoSourceMode) {
-			this.ignoreScrollEvents = true; // prevent scroll exit, as the layout shifts when entering source-mode
-			(this.app as ExtendedApp).commands.executeCommandById(
-				"editor:toggle-source",
-			);
-			setTimeout(() => {
-				this.ignoreScrollEvents = false;
-			}, 200);
-		}
+		this.toggleSourceModeIfNeeded();
 
 		this.addEventListeners();
 		this.updateStatusBar();
@@ -450,16 +441,6 @@ export default class FlashNavigation extends Plugin {
 		this.isActive = false;
 		this.searchQuery = "";
 
-		if (!this.wasInSourceMode && this.settings.autoSourceMode) {
-			this.ignoreScrollEvents = true;
-			(this.app as ExtendedApp).commands.executeCommandById(
-				"editor:toggle-source",
-			);
-			setTimeout(() => {
-				this.ignoreScrollEvents = false;
-			}, 200);
-		}
-
 		this.activeView = null;
 
 		if (this.updateTimeout) {
@@ -481,6 +462,7 @@ export default class FlashNavigation extends Plugin {
 		}
 
 		this.removeEventListeners();
+		this.toggleSourceModeIfNeeded();
 	}
 
 	async loadSettings() {
@@ -552,6 +534,18 @@ export default class FlashNavigation extends Plugin {
 			this.statusBarItem.setText(`⚡ ${this.searchQuery || ""}`);
 		} else {
 			this.statusBarItem.removeClass(CSS_CLASSES.STATUS_BAR_ACTIVE);
+		}
+	}
+
+	private toggleSourceModeIfNeeded(): void {
+		if (!this.wasInSourceMode && this.settings.autoSourceMode) {
+			this.ignoreScrollEvents = true; // prevent scroll exit, as the layout shifts when entering source-mode
+			(this.app as ExtendedApp).commands.executeCommandById(
+				"editor:toggle-source",
+			);
+			setTimeout(() => {
+				this.ignoreScrollEvents = false;
+			}, 200);
 		}
 	}
 }
