@@ -1,6 +1,6 @@
 # Flash Navigation for Obsidian
 
-A powerful navigation plugin for Obsidian that lets you quickly jump to any visible text using search labels and enhanced character motions. Inspired by flash.nvim and similar tools.
+A powerful navigation plugin for Obsidian that lets you quickly jump to any visible text using search labels. Inspired by flash.nvim and similar tools.
 
 [![GitHub stars](https://img.shields.io/github/stars/Erl-koenig/obsidian-flash-navigation?style=flat&label=Stars)](https://github.com/Erl-koenig/obsidian-flash-navigation/stargazers)
 [![Total Downloads](https://img.shields.io/github/downloads/Erl-koenig/obsidian-flash-navigation/total?style=flat&label=Total%20Downloads)](https://github.com/Erl-koenig/obsidian-flash-navigation/releases)
@@ -101,29 +101,17 @@ All colors are optional and will use your current Obsidian theme colors as defau
 - **Label Text**: Uses inverted accent text color (for jump label text)
 - **Question Mark Labels**: Uses yellow color (for overflow labels)
 
-## Roadmap
+## Development & Contribution
 
-Have a feature request? Open an issue on GitHub!
+Feel free to open an issue on GitHub for feature requets or bug reports.
 
-The following features are planned:
-
-- Performance: Optimize for large documents (10,000+ lines)
-- Support navigation for other elements (links, tables, callouts, ...)
-- ...
-
-## Contributing
-
-Contributions are welcome! Please feel free to:
-
-- Report bugs or request features via GitHub Issues
-- Submit pull requests for improvements
-- Share feedback and suggestions
+Contributions are welcome.
 
 ## Acknowledgments
 
 - Inspired by [flash.nvim](https://github.com/folke/flash.nvim) and [flash.vscode](https://github.com/cunbidun/flash.vscode)
-- Built for the [Obsidian](https://obsidian.md) community
-- Uses CodeMirror 6 decorations for precise text highlighting
+- Built for [Obsidian](https://obsidian.md)
+- Uses CodeMirror 6 decorations for text highlighting
 
 ## License
 
