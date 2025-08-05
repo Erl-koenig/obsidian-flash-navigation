@@ -25,7 +25,9 @@ export const DEFAULT_SETTINGS: FlashSettings = {
 	labelQuestionBackgroundColor: "",
 	labelTextColor: "",
 	labelFontWeight: "normal",
-	statusBarPosition: "right",
 	replaceChar: false,
 	autoSourceMode: false,
+	enableStatusBar: true,
+	statusBarPrefix: "⚡",
+	statusBarPosition: "right",
 };

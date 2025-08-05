@@ -70,22 +70,6 @@ export class FlashSettingsTab extends PluginSettingTab {
 		new Setting(containerEl).setName("Visual styling").setHeading();
 
 		new Setting(containerEl)
-			.setName("Status bar position")
-			.setDesc("The position of the status bar item")
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("left", "Left")
-					.addOption("right", "Right")
-					.setValue(this.plugin.settings.statusBarPosition)
-					.onChange(async (value) => {
-						this.plugin.settings.statusBarPosition = value as
-							| "left"
-							| "right";
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl)
 			.setName("Dim color")
 			.setDesc(
 				"The color used to dim text in flash navigation mode (e.g., rgba(128, 128, 128, 0.5))",
@@ -259,5 +243,63 @@ export class FlashSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					}),
 			);
+
+		new Setting(containerEl).setName("Status bar item").setHeading();
+
+		new Setting(containerEl)
+			.setName("Enable status bar item")
+			.setDesc("Show or hide the flash navigation status bar item")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.enableStatusBar)
+					.onChange(async (value) => {
+						this.plugin.settings.enableStatusBar = value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			);
+		new Setting(containerEl)
+			.setName("Status bar position")
+			.setDesc("The position of the status bar item")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("left", "Left")
+					.addOption("right", "Right")
+					.setValue(this.plugin.settings.statusBarPosition)
+					.onChange(async (value) => {
+						this.plugin.settings.statusBarPosition = value as
+							| "left"
+							| "right";
+						await this.plugin.saveSettings();
+					}),
+			)
+			.setDisabled(!this.plugin.settings.enableStatusBar);
+
+		new Setting(containerEl)
+			.setName("Status bar prefix")
+			.setDesc(
+				"Custom icon, character, or text to display before the search query in the status bar",
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("⚡")
+					.setValue(this.plugin.settings.statusBarPrefix)
+					.onChange(async (value) => {
+						this.plugin.settings.statusBarPrefix = value;
+						await this.plugin.saveSettings();
+					}),
+			)
+			.addExtraButton((button) =>
+				button
+					.setIcon("reset")
+					.setTooltip("Reset to default")
+					.onClick(async () => {
+						this.plugin.settings.statusBarPrefix =
+							DEFAULT_SETTINGS.statusBarPrefix;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			)
+			.setDisabled(!this.plugin.settings.enableStatusBar);
 	}
 }

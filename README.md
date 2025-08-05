@@ -86,10 +86,10 @@ nmap s :flashNav<CR>
 The plugin offers various customization options in Settings:
 
 - **Search Behavior**: Case sensitivity and custom label characters
+- **Auto toggle source mode**: Automatically toggle source mode when entering/leaving flash-mode
 - **Visual Styling**: Colors and font weights for dimmed text and matches
 - **Label Styling**: Appearance and position of jump labels
-- **Status Bar Position**: Sets the position of the status bar item
-- **Auto toggle source mode**: Automatically toggle source mode when entering/leaving flash-mode
+- **Status Bar Item**: Customize the statusbar item position, visibility and icon
 
 ### Color Customization
 

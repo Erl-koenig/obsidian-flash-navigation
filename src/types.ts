@@ -11,9 +11,11 @@ export interface FlashSettings {
 	labelQuestionBackgroundColor: string;
 	labelTextColor: string;
 	labelFontWeight: string;
-	statusBarPosition: "left" | "right";
 	replaceChar: boolean;
 	autoSourceMode: boolean;
+	enableStatusBar: boolean;
+	statusBarPrefix: string;
+	statusBarPosition: "left" | "right";
 }
 
 export interface ExtendedApp extends App {

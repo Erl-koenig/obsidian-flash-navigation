@@ -514,6 +514,14 @@ export default class FlashNavigation extends Plugin {
 	}
 
 	private setupStatusBarItem(): void {
+		if (!this.settings.enableStatusBar) {
+			if (this.statusBarItem) {
+				this.statusBarItem.remove();
+				this.statusBarItem = null;
+			}
+			return;
+		}
+
 		if (!this.statusBarItem) {
 			this.statusBarItem = this.addStatusBarItem();
 			this.statusBarItem.addClass(CSS_CLASSES.STATUS_BAR);
@@ -527,11 +535,16 @@ export default class FlashNavigation extends Plugin {
 	}
 
 	private updateStatusBar(): void {
-		if (!this.statusBarItem) return;
+		if (!this.statusBarItem || !this.settings.enableStatusBar) {
+			return;
+		}
 
 		if (this.isActive) {
 			this.statusBarItem.addClass(CSS_CLASSES.STATUS_BAR_ACTIVE);
-			this.statusBarItem.setText(`⚡ ${this.searchQuery || ""}`);
+			const prefix =
+				this.settings.statusBarPrefix ||
+				DEFAULT_SETTINGS.statusBarPrefix;
+			this.statusBarItem.setText(`${prefix} ${this.searchQuery || ""}`);
 		} else {
 			this.statusBarItem.removeClass(CSS_CLASSES.STATUS_BAR_ACTIVE);
 		}
