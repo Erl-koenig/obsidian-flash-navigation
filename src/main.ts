@@ -19,6 +19,7 @@ import {
 } from "./decorators";
 import { LabelWidget } from "./widgets";
 import { FlashSettingsTab } from "./settings";
+import { ExtendedApp } from "./types";
 
 export default class FlashNavigation extends Plugin {
 	settings!: FlashSettings;
@@ -31,6 +32,8 @@ export default class FlashNavigation extends Plugin {
 	private updateTimeout: number | null = null;
 	private lastState: LastState = { matches: [], query: "" };
 	private statusBarItem: HTMLElement | null = null;
+	private wasInSourceMode = false;
+	private ignoreScrollEvents = false;
 
 	async onload() {
 		await this.loadSettings();
@@ -49,7 +52,9 @@ export default class FlashNavigation extends Plugin {
 			}),
 		);
 		this.scrollHandler = (event: Event) => {
-			this.exitFlashMode();
+			if (!this.ignoreScrollEvents) {
+				this.exitFlashMode();
+			}
 		};
 
 		this.keydownHandler = (event: KeyboardEvent) => {
@@ -149,6 +154,17 @@ export default class FlashNavigation extends Plugin {
 		this.searchQuery = "";
 		this.labelMap.clear();
 		this.activeView = view;
+
+		this.wasInSourceMode = Boolean(view.getState().source);
+		if (!this.wasInSourceMode && this.settings.autoSourceMode) {
+			this.ignoreScrollEvents = true; // prevent scroll exit, as the layout shifts when entering source-mode
+			(this.app as ExtendedApp).commands.executeCommandById(
+				"editor:toggle-source",
+			);
+			setTimeout(() => {
+				this.ignoreScrollEvents = false;
+			}, 200);
+		}
 
 		this.addEventListeners();
 		this.updateStatusBar();
@@ -433,6 +449,17 @@ export default class FlashNavigation extends Plugin {
 		if (!this.isActive) return;
 		this.isActive = false;
 		this.searchQuery = "";
+
+		if (!this.wasInSourceMode && this.settings.autoSourceMode) {
+			this.ignoreScrollEvents = true;
+			(this.app as ExtendedApp).commands.executeCommandById(
+				"editor:toggle-source",
+			);
+			setTimeout(() => {
+				this.ignoreScrollEvents = false;
+			}, 200);
+		}
+
 		this.activeView = null;
 
 		if (this.updateTimeout) {

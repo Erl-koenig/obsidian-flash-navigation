@@ -18,6 +18,20 @@ export class FlashSettingsTab extends PluginSettingTab {
 		new Setting(containerEl).setName("Search behavior").setHeading();
 
 		new Setting(containerEl)
+			.setName("Auto toggle source-mode")
+			.setDesc(
+				"Automatically switches to source mode when entering flash mode, enabling navigation for all elements (callouts, tables, links, etc.). Only toggles source mode if it's not already active. Note: This can cause layout shifts, which can look weird.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.autoSourceMode)
+					.onChange(async (value) => {
+						this.plugin.settings.autoSourceMode = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName("Case sensitive")
 			.setDesc("Whether search should be case sensitive")
 			.addToggle((toggle) =>

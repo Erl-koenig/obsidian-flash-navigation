@@ -1,3 +1,4 @@
+import { App } from "obsidian";
 import { EditorView } from "@codemirror/view";
 
 export interface FlashSettings {
@@ -12,6 +13,13 @@ export interface FlashSettings {
 	labelFontWeight: string;
 	statusBarPosition: "left" | "right";
 	replaceChar: boolean;
+	autoSourceMode: boolean;
+}
+
+export interface ExtendedApp extends App {
+	commands: {
+		executeCommandById: (commandId: string) => void;
+	};
 }
 
 export interface ObsidianEditor {
