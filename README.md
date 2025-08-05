@@ -89,6 +89,7 @@ The plugin offers various customization options in Settings:
 - **Visual Styling**: Colors and font weights for dimmed text and matches
 - **Label Styling**: Appearance and position of jump labels
 - **Status Bar Position**: Sets the position of the status bar item
+- **Auto toggle source mode**: Automatically toggle source mode when entering/leaving flash-mode
 
 ### Color Customization
 
