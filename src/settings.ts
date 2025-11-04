@@ -20,7 +20,7 @@ export class FlashSettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Auto toggle source mode")
 			.setDesc(
-				"Automatically switches to source mode when entering flash mode, enabling navigation for all elements (callouts, tables, links, etc.). Only toggles source mode if it's not already active. Note: This can cause layout shifts, which can look weird.",
+				"Automatically switches to source mode when entering flash mode, enabling navigation for all elements (callouts, tables, links, etc.). Only toggles source mode if it's not already active. Note: this can cause layout shifts, which can look weird.",
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -47,6 +47,7 @@ export class FlashSettingsTab extends PluginSettingTab {
 			.setName("Label characters")
 			.setDesc("Characters used for jump labels")
 			.addText((text) => {
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				text.setPlaceholder("abcdefghijklmnopqrstuvwxyz...")
 					.setValue(this.plugin.settings.labelChars)
 					.onChange(async (value) => {
@@ -76,6 +77,7 @@ export class FlashSettingsTab extends PluginSettingTab {
 			)
 			.addText((text) =>
 				text
+					// eslint-disable-next-line obsidianmd/ui/sentence-case
 					.setPlaceholder("rgba(128, 128, 128, 0.5)")
 					.setValue(this.plugin.settings.dimColor)
 					.onChange(async (value) => {
@@ -102,7 +104,8 @@ export class FlashSettingsTab extends PluginSettingTab {
 			)
 			.addText((text) =>
 				text
-					.setPlaceholder("rgb(0,191,255)")
+					// eslint-disable-next-line obsidianmd/ui/sentence-case
+					.setPlaceholder("rgb(0, 191, 255)")
 					.setValue(this.plugin.settings.matchColor)
 					.onChange(async (value) => {
 						this.plugin.settings.matchColor = value;
@@ -211,7 +214,7 @@ export class FlashSettingsTab extends PluginSettingTab {
 			)
 			.addText((text) =>
 				text
-					.setPlaceholder("black")
+					.setPlaceholder("Black")
 					.setValue(this.plugin.settings.labelTextColor)
 					.onChange(async (value) => {
 						this.plugin.settings.labelTextColor = value;
