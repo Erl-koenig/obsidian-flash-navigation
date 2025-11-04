@@ -106,7 +106,7 @@ export default class FlashNavigation extends Plugin {
 		};
 
 		this.addCommand({
-			id: "start-flash-navigation",
+			id: "start-navigation",
 			name: "Start navigation",
 			editorCallback: (
 				editor: Editor,
