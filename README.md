@@ -40,7 +40,7 @@ A powerful navigation plugin for Obsidian that lets you quickly jump to any visi
 
 Add a command to trigger flash navigation. You can use:
 
-- Command Palette: Search for "Start Flash Navigation"
+- Command Palette: Search for "Start Navigation"
 - Hotkey: Set a custom hotkey in Obsidian Settings > Hotkeys
 
 ### Vim Mode Setup (Recommended)
@@ -50,7 +50,7 @@ If you use Vim mode with the Vimrc plugin, add this to your `.obsidian.vimrc`:
 ```vim
 " Unmap the default 's' command and remap to flash navigation
 nunmap s
-exmap flashNav obcommand flash-navigation:start-flash-navigation
+exmap flashNav obcommand flash-navigation:start-navigation
 nmap s :flashNav<CR>
 ```
 
