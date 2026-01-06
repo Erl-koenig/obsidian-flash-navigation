@@ -51,7 +51,7 @@ export default class FlashNavigation extends Plugin {
 				this.exitFlashMode();
 			}),
 		);
-		this.scrollHandler = (event: Event) => {
+		this.scrollHandler = (_event: Event) => {
 			if (!this.ignoreScrollEvents) {
 				this.exitFlashMode();
 			}
@@ -109,7 +109,7 @@ export default class FlashNavigation extends Plugin {
 			id: "start-navigation",
 			name: "Start navigation",
 			editorCallback: (
-				editor: Editor,
+				_editor: Editor,
 				ctx: MarkdownView | MarkdownFileInfo,
 			) => {
 				if (ctx instanceof MarkdownView && !this.isActive) {
