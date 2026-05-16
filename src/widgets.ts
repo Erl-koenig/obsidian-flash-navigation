@@ -10,7 +10,7 @@ export class LabelWidget extends WidgetType {
 	}
 
 	toDOM() {
-		const span = document.createElement("span");
+		const span = createSpan();
 		span.className = this.isQuestionMark
 			? `${CSS_CLASSES.LABEL} ${CSS_CLASSES.LABEL_QUESTION}`
 			: CSS_CLASSES.LABEL;

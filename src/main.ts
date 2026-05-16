@@ -51,7 +51,7 @@ export default class FlashNavigation extends Plugin {
 				this.exitFlashMode();
 			}),
 		);
-		this.scrollHandler = (_event: Event) => {
+		this.scrollHandler = () => {
 			if (!this.ignoreScrollEvents) {
 				this.exitFlashMode();
 			}
@@ -126,25 +126,25 @@ export default class FlashNavigation extends Plugin {
 	}
 
 	private addEventListeners(): void {
-		document.addEventListener("keydown", this.keydownHandler, {
+		activeDocument.addEventListener("keydown", this.keydownHandler, {
 			capture: true,
 		});
-		document.addEventListener("scroll", this.scrollHandler, {
+		activeDocument.addEventListener("scroll", this.scrollHandler, {
 			capture: true,
 		});
-		document.addEventListener("wheel", this.scrollHandler, {
+		activeDocument.addEventListener("wheel", this.scrollHandler, {
 			capture: true,
 		});
 	}
 
 	private removeEventListeners(): void {
-		document.removeEventListener("keydown", this.keydownHandler, {
+		activeDocument.removeEventListener("keydown", this.keydownHandler, {
 			capture: true,
 		});
-		document.removeEventListener("scroll", this.scrollHandler, {
+		activeDocument.removeEventListener("scroll", this.scrollHandler, {
 			capture: true,
 		});
-		document.removeEventListener("wheel", this.scrollHandler, {
+		activeDocument.removeEventListener("wheel", this.scrollHandler, {
 			capture: true,
 		});
 	}
@@ -164,10 +164,10 @@ export default class FlashNavigation extends Plugin {
 
 	private updateHighlights(): void {
 		if (this.updateTimeout) {
-			clearTimeout(this.updateTimeout);
+			activeWindow.clearTimeout(this.updateTimeout);
 		}
 
-		this.updateTimeout = window.setTimeout(() => {
+		this.updateTimeout = activeWindow.setTimeout(() => {
 			this.performUpdate();
 		}, DEBOUNCE_DELAY);
 	}
@@ -444,7 +444,7 @@ export default class FlashNavigation extends Plugin {
 		this.activeView = null;
 
 		if (this.updateTimeout) {
-			clearTimeout(this.updateTimeout);
+			activeWindow.clearTimeout(this.updateTimeout);
 			this.updateTimeout = null;
 		}
 
@@ -466,11 +466,12 @@ export default class FlashNavigation extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData(),
-		);
+		const loadedSettings =
+			(await this.loadData()) as Partial<FlashSettings> | null;
+		this.settings = {
+			...DEFAULT_SETTINGS,
+			...(loadedSettings ?? {}),
+		};
 	}
 
 	async saveSettings() {
@@ -506,9 +507,9 @@ export default class FlashNavigation extends Plugin {
 
 		Object.entries(updates).forEach(([key, value]) => {
 			if (value && !value.startsWith("var(")) {
-				document.documentElement.style.setProperty(key, value);
+				activeDocument.documentElement.style.setProperty(key, value);
 			} else {
-				document.documentElement.style.removeProperty(key); // use fallback values (obsidian css variables)
+				activeDocument.documentElement.style.removeProperty(key); // use fallback values (obsidian css variables)
 			}
 		});
 	}
@@ -556,7 +557,7 @@ export default class FlashNavigation extends Plugin {
 			(this.app as ExtendedApp).commands.executeCommandById(
 				"editor:toggle-source",
 			);
-			setTimeout(() => {
+			activeWindow.setTimeout(() => {
 				this.ignoreScrollEvents = false;
 			}, 200);
 		}

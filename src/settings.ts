@@ -47,8 +47,7 @@ export class FlashSettingsTab extends PluginSettingTab {
 			.setName("Label characters")
 			.setDesc("Characters used for jump labels")
 			.addText((text) => {
-				// eslint-disable-next-line obsidianmd/ui/sentence-case
-				text.setPlaceholder("abcdefghijklmnopqrstuvwxyz...")
+				text.setPlaceholder(`Default: ${DEFAULT_SETTINGS.labelChars}`)
 					.setValue(this.plugin.settings.labelChars)
 					.onChange(async (value) => {
 						this.plugin.settings.labelChars = value;
@@ -77,8 +76,7 @@ export class FlashSettingsTab extends PluginSettingTab {
 			)
 			.addText((text) =>
 				text
-					// eslint-disable-next-line obsidianmd/ui/sentence-case
-					.setPlaceholder("rgba(128, 128, 128, 0.5)")
+					.setPlaceholder("Rgba(128, 128, 128, 0.5)")
 					.setValue(this.plugin.settings.dimColor)
 					.onChange(async (value) => {
 						this.plugin.settings.dimColor = value;
@@ -104,8 +102,7 @@ export class FlashSettingsTab extends PluginSettingTab {
 			)
 			.addText((text) =>
 				text
-					// eslint-disable-next-line obsidianmd/ui/sentence-case
-					.setPlaceholder("rgb(0, 191, 255)")
+					.setPlaceholder("Rgb(0, 191, 255)")
 					.setValue(this.plugin.settings.matchColor)
 					.onChange(async (value) => {
 						this.plugin.settings.matchColor = value;
