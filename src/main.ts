@@ -7,9 +7,15 @@ import {
 	Match,
 	CursorPosition,
 	LastState,
+	TargetLabel,
 } from "./types";
 import { DEFAULT_SETTINGS, DEBOUNCE_DELAY, CSS_CLASSES } from "./constants";
-import { getVisibleRange, matchesEqual, sortMatchesByDistance } from "./utils";
+import {
+	getVisibleRange,
+	matchesEqual,
+	sortMatchesByDistance,
+	generateLabels,
+} from "./utils";
 import {
 	flashDecorationField,
 	addDimEffect,
@@ -25,9 +31,12 @@ export default class FlashNavigation extends Plugin {
 	settings!: FlashSettings;
 	private isActive = false;
 	private searchQuery = "";
+	private pendingPrefix = "";
 	private keydownHandler!: (event: KeyboardEvent) => void;
 	private scrollHandler!: (event: Event) => void;
+	private targetLabels: TargetLabel[] = [];
 	private labelMap: Map<string, CursorPosition> = new Map();
+	private prefixMap: Set<string> = new Set();
 	private activeView: MarkdownView | null = null;
 	private updateTimeout: number | null = null;
 	private lastState: LastState = { matches: [], query: "" };
@@ -71,11 +80,25 @@ export default class FlashNavigation extends Plugin {
 					return;
 				}
 
+				const editorView = (
+					this.activeView.editor as unknown as ObsidianEditor
+				).cm;
+				if (!editorView) return;
+
 				event.preventDefault();
 
 				if (event.key === "Backspace") {
+					if (this.pendingPrefix.length > 0) {
+						this.pendingPrefix = "";
+						this.renderDecorations(editorView);
+						this.updateStatusBar();
+						return;
+					}
 					if (this.searchQuery.length > 0) {
+						this.pendingPrefix = "";
 						this.labelMap.clear();
+						this.prefixMap.clear();
+						this.targetLabels = [];
 						this.searchQuery = this.searchQuery.slice(0, -1);
 						this.updateStatusBar();
 						this.updateHighlights();
@@ -85,19 +108,62 @@ export default class FlashNavigation extends Plugin {
 					return;
 				}
 
-				// Check if jumping is possible
-				if (this.labelMap.size > 0 && this.labelMap.has(event.key)) {
-					const target = this.labelMap.get(event.key);
-					if (target) {
-						this.jumpToPosition(target);
-						this.exitFlashMode();
-					}
-					return;
-				}
-
-				// adding a character
 				if (event.key.length === 1) {
+					// 1. If currently in prefix mode
+					if (this.pendingPrefix.length > 0) {
+						const targetKey = this.pendingPrefix + event.key;
+						if (this.labelMap.has(targetKey)) {
+							const target = this.labelMap.get(targetKey);
+							if (target) {
+								this.jumpToPosition(target);
+								this.exitFlashMode();
+							}
+							return;
+						}
+
+						// Check if there is a deeper prefix (for 3+ char labels)
+						let hasDeeperPrefix = false;
+						for (const fullLabel of this.labelMap.keys()) {
+							if (fullLabel.startsWith(targetKey)) {
+								hasDeeperPrefix = true;
+								break;
+							}
+						}
+
+						if (hasDeeperPrefix) {
+							this.pendingPrefix = targetKey;
+							this.renderDecorations(editorView);
+							this.updateStatusBar();
+							return;
+						}
+
+						// Invalid second key in prefix mode - ignore
+						return;
+					}
+
+					// 2. Not in prefix mode: check if it's an immediate 1-char jump label
+					if (this.labelMap.has(event.key)) {
+						const target = this.labelMap.get(event.key);
+						if (target) {
+							this.jumpToPosition(target);
+							this.exitFlashMode();
+						}
+						return;
+					}
+
+					// 3. Check if it's the start of a multi-char prefix
+					if (this.prefixMap.has(event.key)) {
+						this.pendingPrefix = event.key;
+						this.renderDecorations(editorView);
+						this.updateStatusBar();
+						return;
+					}
+
+					// 4. Regular search character
+					this.pendingPrefix = "";
 					this.labelMap.clear();
+					this.prefixMap.clear();
+					this.targetLabels = [];
 					this.searchQuery += event.key;
 					this.updateStatusBar();
 					this.updateHighlights();
@@ -129,9 +195,6 @@ export default class FlashNavigation extends Plugin {
 		activeDocument.addEventListener("keydown", this.keydownHandler, {
 			capture: true,
 		});
-		activeDocument.addEventListener("scroll", this.scrollHandler, {
-			capture: true,
-		});
 		activeDocument.addEventListener("wheel", this.scrollHandler, {
 			capture: true,
 		});
@@ -139,9 +202,6 @@ export default class FlashNavigation extends Plugin {
 
 	private removeEventListeners(): void {
 		activeDocument.removeEventListener("keydown", this.keydownHandler, {
-			capture: true,
-		});
-		activeDocument.removeEventListener("scroll", this.scrollHandler, {
 			capture: true,
 		});
 		activeDocument.removeEventListener("wheel", this.scrollHandler, {
@@ -152,7 +212,10 @@ export default class FlashNavigation extends Plugin {
 	private startFlashMode(view: MarkdownView) {
 		this.isActive = true;
 		this.searchQuery = "";
+		this.pendingPrefix = "";
 		this.labelMap.clear();
+		this.prefixMap.clear();
+		this.targetLabels = [];
 		this.activeView = view;
 		this.wasInSourceMode = Boolean(view.getState().source);
 		this.toggleSourceModeIfNeeded();
@@ -181,6 +244,7 @@ export default class FlashNavigation extends Plugin {
 
 		const queryChanged = this.searchQuery !== this.lastState.query;
 		if (queryChanged) {
+			this.pendingPrefix = "";
 			editorView.dispatch({
 				effects: clearAllEffect.of(null),
 			});
@@ -191,6 +255,9 @@ export default class FlashNavigation extends Plugin {
 		if (this.searchQuery.length === 0) {
 			this.dimVisibleText(editorView);
 			this.lastState.matches = [];
+			this.targetLabels = [];
+			this.labelMap.clear();
+			this.prefixMap.clear();
 			return;
 		}
 
@@ -201,22 +268,11 @@ export default class FlashNavigation extends Plugin {
 			return;
 		}
 
-		// Only update if matches actually changed
-		if (!matchesEqual(matches, this.lastState.matches)) {
+		// Update if matches changed or query changed
+		if (!matchesEqual(matches, this.lastState.matches) || queryChanged) {
 			this.lastState.matches = matches;
-
-			const decorations = this.createOptimizedDecorations(
-				editorView,
-				matches,
-			);
-
-			editorView.dispatch({
-				effects: [
-					addDimEffect.of(decorations.dim),
-					addMatchEffect.of(decorations.match),
-					addLabelEffect.of(decorations.label),
-				],
-			});
+			this.computeTargetLabels(editorView, matches);
+			this.renderDecorations(editorView);
 		}
 	}
 
@@ -271,14 +327,59 @@ export default class FlashNavigation extends Plugin {
 		});
 	}
 
-	private createOptimizedDecorations(
+	private computeTargetLabels(
 		editorView: EditorView,
 		matches: Match[],
-	): {
-		dim: Range<Decoration>[];
-		match: Range<Decoration>[];
-		label: Range<Decoration>[];
-	} {
+	): void {
+		const doc = editorView.state.doc;
+		const availableChars = this.getAvailableLabelChars(editorView, matches);
+
+		this.labelMap.clear();
+		this.prefixMap.clear();
+		this.targetLabels = [];
+
+		let labels: string[] = [];
+
+		if (this.settings.multiCharLabels) {
+			labels = generateLabels(availableChars, matches.length);
+		} else {
+			// Legacy behavior: 1-char labels + '?' for overflow
+			const total = matches.length;
+			labels =
+				total > availableChars.length
+					? availableChars.concat(
+							Array(total - availableChars.length).fill("?"),
+						)
+					: availableChars.slice(0, total);
+		}
+
+		for (let i = 0; i < matches.length; i++) {
+			const match = matches[i];
+			const label = labels[i];
+			if (!label) continue;
+
+			const pos = doc.lineAt(match.from);
+			const cursorPos: CursorPosition = {
+				line: pos.number - 1,
+				ch: match.from - pos.from,
+			};
+
+			if (label !== "?") {
+				this.labelMap.set(label, cursorPos);
+				if (label.length > 1) {
+					this.prefixMap.add(label[0]);
+				}
+			}
+
+			this.targetLabels.push({
+				match,
+				label,
+				pos: cursorPos,
+			});
+		}
+	}
+
+	private renderDecorations(editorView: EditorView): void {
 		const doc = editorView.state.doc;
 		const dimDecorations: Range<Decoration>[] = [];
 		const matchDecorations: Range<Decoration>[] = [];
@@ -288,26 +389,17 @@ export default class FlashNavigation extends Plugin {
 		const matchDecoration = Decoration.mark({ class: CSS_CLASSES.MATCH });
 
 		const visibleRange = getVisibleRange(editorView);
+		if (!visibleRange) return;
 
-		if (!visibleRange) {
-			return {
-				dim: dimDecorations,
-				match: matchDecorations,
-				label: labelDecorations,
-			};
-		}
-
-		const matchesInRange = matches.filter(
+		const matchesInRange = this.lastState.matches.filter(
 			(m) => m.from >= visibleRange.from && m.to <= visibleRange.to,
 		);
 
 		if (matchesInRange.length === 0) {
-			// Dim entire visible range if no matches
 			dimDecorations.push(
 				dimDecoration.range(visibleRange.from, visibleRange.to),
 			);
 		} else {
-			// Dim segments between matches
 			let lastEnd = visibleRange.from;
 			for (const match of matchesInRange) {
 				if (lastEnd < match.from) {
@@ -324,32 +416,20 @@ export default class FlashNavigation extends Plugin {
 			}
 		}
 
-		// Highlight all matches
-		for (const match of matches) {
+		for (const match of this.lastState.matches) {
 			matchDecorations.push(matchDecoration.range(match.from, match.to));
 		}
 
-		const availableLabelChars = this.getAvailableLabelChars(
-			editorView,
-			matches,
-		);
-		const totalMatches = matches.length;
-		const labelCharsToUse =
-			totalMatches > availableLabelChars.length
-				? availableLabelChars.concat(
-						Array(totalMatches - availableLabelChars.length).fill(
-							"?",
-						),
-					)
-				: availableLabelChars.slice(0, totalMatches);
+		this.createLabels(doc, this.targetLabels, labelDecorations);
 
-		this.createLabels(doc, matches, labelCharsToUse, labelDecorations);
-
-		return {
-			dim: dimDecorations,
-			match: matchDecorations,
-			label: labelDecorations,
-		};
+		editorView.dispatch({
+			effects: [
+				clearAllEffect.of(null),
+				addDimEffect.of(dimDecorations),
+				addMatchEffect.of(matchDecorations),
+				addLabelEffect.of(labelDecorations),
+			],
+		});
 	}
 
 	private getAvailableLabelChars(
@@ -370,50 +450,62 @@ export default class FlashNavigation extends Plugin {
 
 		const allNextChars = [...new Set(nextChars)];
 		const labelChars = this.getSettingWithDefault("labelChars");
-		return labelChars.split("").filter((c) => !allNextChars.includes(c));
+		const available = labelChars
+			.split("")
+			.filter((c) => !allNextChars.includes(c));
+
+		return available.length > 0 ? available : labelChars.split("");
 	}
 
 	private createLabels(
 		doc: CMText,
-		matches: Match[],
-		labelChars: string[],
+		targets: TargetLabel[],
 		labelDecorations: Range<Decoration>[],
 	): void {
-		for (let i = 0; i < Math.min(matches.length, labelChars.length); i++) {
-			const match = matches[i];
-			const label = labelChars[i];
+		for (const target of targets) {
+			const { match, label } = target;
 
-			if (label !== "?") {
-				const pos = doc.lineAt(match.from);
-				this.labelMap.set(label, {
-					line: pos.number - 1,
-					ch: match.from - pos.from,
-				});
+			let isFocused = false;
+			let displayLabel = label;
+			const isQuestionMark = label === "?";
+
+			if (this.pendingPrefix.length > 0) {
+				if (label.startsWith(this.pendingPrefix)) {
+					displayLabel = label.slice(this.pendingPrefix.length);
+					isFocused = true;
+				} else {
+					// Omit label widgets that don't match the active prefix
+					continue;
+				}
 			}
 
+			const widget = new LabelWidget(
+				displayLabel,
+				isQuestionMark,
+				isFocused,
+				false,
+			);
+
 			if (this.settings.replaceChar && match.to < doc.length) {
-				// Check if the next character is a new line (else it shifts the line to the previous one)
 				const nextChar = doc.sliceString(match.to, match.to + 1);
 				if (nextChar === "\n") {
-					// dont replace newlines, just insert the label at the end (default behavior)
 					const labelDecoration = Decoration.widget({
-						widget: new LabelWidget(label, label === "?"),
+						widget,
 						side: 1,
 					});
 					labelDecorations.push(labelDecoration.range(match.to));
 				} else {
 					const nextCharEnd = match.to + 1;
 					const replaceDecoration = Decoration.replace({
-						widget: new LabelWidget(label, label === "?"),
+						widget,
 					});
 					labelDecorations.push(
 						replaceDecoration.range(match.to, nextCharEnd),
 					);
 				}
 			} else {
-				// Default behavior: insert label after match
 				const labelDecoration = Decoration.widget({
-					widget: new LabelWidget(label, label === "?"),
+					widget,
 					side: 1,
 				});
 				labelDecorations.push(labelDecoration.range(match.to));
@@ -440,6 +532,10 @@ export default class FlashNavigation extends Plugin {
 		if (!this.isActive) return;
 		this.isActive = false;
 		this.searchQuery = "";
+		this.pendingPrefix = "";
+		this.labelMap.clear();
+		this.prefixMap.clear();
+		this.targetLabels = [];
 
 		this.activeView = null;
 
@@ -545,7 +641,15 @@ export default class FlashNavigation extends Plugin {
 			const prefix =
 				this.settings.statusBarPrefix ||
 				DEFAULT_SETTINGS.statusBarPrefix;
-			this.statusBarItem.setText(`${prefix} ${this.searchQuery || ""}`);
+			if (this.pendingPrefix.length > 0) {
+				this.statusBarItem.setText(
+					`${prefix} ${this.searchQuery} [${this.pendingPrefix}...]`,
+				);
+			} else {
+				this.statusBarItem.setText(
+					`${prefix} ${this.searchQuery || ""}`,
+				);
+			}
 		} else {
 			this.statusBarItem.removeClass(CSS_CLASSES.STATUS_BAR_ACTIVE);
 		}
