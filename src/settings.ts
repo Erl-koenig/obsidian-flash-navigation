@@ -138,6 +138,20 @@ export class FlashSettingsTab extends PluginSettingTab {
 		new Setting(containerEl).setName("Label styling").setHeading();
 
 		new Setting(containerEl)
+			.setName("Multi-character jump labels")
+			.setDesc(
+				"Use multi-character labels (e.g., [a], [ea], [eb]) for overflow matches instead of displaying question marks (?). Enables immediate navigation to all visible matches.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.multiCharLabels)
+					.onChange(async (value) => {
+						this.plugin.settings.multiCharLabels = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName("Replace next character")
 			.setDesc(
 				"Show jump labels over the next character instead of inserting them after matches. For example, when searching ‘tre’ in the string ‘tree’, the jump label displays as ‘tre[a]’ over the last ‘e’, not as ‘tre[a]e’.",

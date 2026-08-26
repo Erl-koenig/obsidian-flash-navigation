@@ -12,6 +12,7 @@ export interface FlashSettings {
 	labelTextColor: string;
 	labelFontWeight: string;
 	replaceChar: boolean;
+	multiCharLabels: boolean;
 	autoSourceMode: boolean;
 	enableStatusBar: boolean;
 	statusBarPrefix: string;
@@ -41,4 +42,10 @@ export type CursorPosition = {
 export type LastState = {
 	matches: Match[];
 	query: string;
+};
+
+export type TargetLabel = {
+	match: Match;
+	label: string;
+	pos: CursorPosition;
 };

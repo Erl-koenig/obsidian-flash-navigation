@@ -15,7 +15,8 @@ export const flashDecorationField = StateField.define<DecorationSet>({
 
 		for (const effect of transaction.effects) {
 			if (effect.is(clearAllEffect)) {
-				return Decoration.none;
+				decorations = Decoration.none;
+				continue;
 			}
 
 			if (

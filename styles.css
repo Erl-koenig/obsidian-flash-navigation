@@ -25,6 +25,25 @@
 	border-radius: 2px !important;
 	display: inline-block;
 	line-height: 1 !important;
+	user-select: none;
+}
+
+/* Multi-character label parts */
+.flash-label-prefix {
+	opacity: 0.75;
+}
+
+.flash-label-target {
+	font-weight: bold;
+}
+
+/* Focused label when prefix is active */
+.flash-label-focus {
+	box-shadow: 0 0 0 1.5px var(--text-accent, #7057ff);
+}
+
+.flash-label.flash-dim {
+	opacity: 0.2 !important;
 }
 
 /* Question mark labels for overflow */
